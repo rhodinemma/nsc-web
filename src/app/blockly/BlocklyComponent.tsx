@@ -30,16 +30,20 @@ const BlocklyComponent: React.FC = () => {
   const blocklyDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setupCustomBlocks(); // Set up custom blocks
+    const initializeBlockly = async () => {
+      await setupCustomBlocks(); // Set up custom blocks
 
-    if (blocklyDivRef.current) {
-      Blockly.inject(blocklyDivRef.current, {
-        toolbox: `<xml>
-                     <block type="print_hello"></block>
-                     <block type="controls_if"></block>
-                   </xml>`,
-      });
-    }
+      if (blocklyDivRef.current) {
+        const blockly = await Blockly;
+        blockly.inject(blocklyDivRef.current, {
+          toolbox: `<xml>
+                       <block type="print_hello"></block>
+                     </xml>`,
+        });
+      }
+    };
+
+    initializeBlockly();
   }, []);
 
   return <div ref={blocklyDivRef} style={{ height: "600px", width: "100%" }} />;

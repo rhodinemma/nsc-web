@@ -28,7 +28,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <header>
+          <h1>Blockly & Scratch App</h1>
+        </header>
+        <main>{children}</main>
+        <footer>
+          <p>© 2024 Blockly & Scratch App</p>
+        </footer>
       </body>
     </html>
   );

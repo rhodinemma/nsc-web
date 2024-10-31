@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ThemeProvider } from "@mui/material";
+import { PrimaryTheme } from "@/Theme";
+import Header from "../components/Header/ChallengeHeader"
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -26,15 +30,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        style={{margin:'0px'}}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <header>
-          <h1>Blockly & Scratch App</h1>
-        </header>
-        <main>{children}</main>
-        <footer>
-          <p>© 2024 Blockly & Scratch App</p>
-        </footer>
+        <ThemeProvider theme={PrimaryTheme}>
+          <Header />
+          <main>{children}</main>
+        </ThemeProvider>
+        
       </body>
     </html>
   );

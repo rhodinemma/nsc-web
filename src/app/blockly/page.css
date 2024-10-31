@@ -1,0 +1,50 @@
+.Blocklyheading{
+    height : 13dvh;
+    width : 100%;
+    display : flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-left : 40px;
+}
+
+.BlocklyPanels{
+    min-height: 70dvh;
+    width : 99%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+}
+
+.BlocklyGamesPanel{
+    height : 60dvh;
+    width : 40%;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+
+}
+
+.BlocklyGamesBoard{
+    height : 60dvh;
+    width : 55%;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.PanelSubHeading{
+    height : 20%;
+    width : 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin-left: 20px;
+}
+
+.PanelChannels{
+    height: 80%;
+    width :100%;
+    overflow-y: auto;
+}

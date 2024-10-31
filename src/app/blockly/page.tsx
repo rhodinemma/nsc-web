@@ -1,124 +1,313 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
-import React, { useState, useEffect, useRef } from "react";
-import * as Blockly from "blockly";
-import { BlocklyWorkspace } from "react-blockly";
-import { forwardRef } from "react";
-import "./App.css";
-import { javascriptGenerator } from "blockly/javascript";
+/* eslint-disable react-hooks/rules-of-hooks */
+"use client"
+import React, {useState} from "react";
 
-type Position = {
-  x: number;
-  y: number;
-};
+import "./page.css";
+import { 
+    Typography,
+    Divider,
+    List,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Collapse,
+    Box
+ } from "@mui/material";
 
-function App() {
-  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
-  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
+ import CircularProgress, {
+    CircularProgressProps,
+  } from '@mui/material/CircularProgress';
 
-  const initializeBlockly = () => {
-    Blockly.Blocks["move_pin"] = {
-      init: function () {
-        this.appendDummyInput().appendField("Move pin two left and forward");
-        this.setNextStatement(true, null);
-        this.setPreviousStatement(true, null);
-        this.setColour(230);
-        this.setTooltip("Move pin two units to the left and forward");
-        this.setHelpUrl("");
-      },
-    };
+  import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
-    Blockly.Blocks["move_pin_left_forward"] = {
-      init: function () {
-        this.appendDummyInput().appendField("Move pin left and forward");
-        this.setNextStatement(true, null);
-        this.setPreviousStatement(true, null);
-        this.setColour(230);
-        this.setTooltip("Move pin one unit to the left and forward");
-        this.setHelpUrl("");
-      },
-    };
+ import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ExtensionIcon from '@mui/icons-material/Extension';
 
-    javascriptGenerator.forBlock["move_pin"] = function () {
-      return "movePin();\n";
-    };
+ interface Game {
+    id : number;
+    name : string;
+    description : string;
+    isAuthorizedtoTake : boolean; 
+    challenges : {
+        id : number
+        name : string;
+        description : string;
+        isCompleted : boolean;
+    }[]
+ }
 
-    javascriptGenerator.forBlock["move_pin_left_forward"] = function () {
-      return "movePinLeftForward();\n";
-    };
-  };
+ 
 
-  useEffect(() => {
-    initializeBlockly();
-  }, []);
+ function CircularProgressWithLabel(
+    props: CircularProgressProps & { value: number },
+  ) {
+    return (
+      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+        <CircularProgress variant="determinate" {...props} />
+        <Box
+          sx={{
+            top: 0,
+            left: 0,
+            bottom: 0,
+            right: 0,
+            position: 'absolute',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography
+            variant="caption"
+            component="div"
+            sx={{ color: 'text.secondary' }}
+          >{`${Math.round(props.value)}%`}</Typography>
+        </Box>
+      </Box>
+    );
+  }
 
-  const movePin = () => {
-    setPosition((prevPos) => ({
-      x: prevPos.x - 2,
-      y: prevPos.y + 2,
-    }));
-  };
+export const page = () => {
 
-  const movePinLeftForward = () => {
-    setPosition((prevPos) => ({
-      x: prevPos.x - 1,
-      y: prevPos.y + 1,
-    }));
-  };
+    const games : Game[] = [
+        {
+            id : 1,
+            name : 'Maze Escape',
+            description : '',
+            isAuthorizedtoTake : true,
+            challenges : [
+                {
+                    id : 1,
+                    name : 'Level 1',
+                    description : 'Level 1',
+                    isCompleted : true,
+                },
+                {
+                    id : 2,
+                    name : 'Level 2',
+                    description : 'Level 2',
+                    isCompleted : true,
+                },
+                {
+                    id : 3, 
+                    name : 'Level 3',
+                    description : 'Level 3',
+                    isCompleted : true,
+                }
+            ]
+        },
+        {
+            id : 2,
+            name : 'Treasure Hunt',
+            description : '',
+            isAuthorizedtoTake : true,
+            challenges : [
+                {
+                    id : 1,
+                    name : 'Level 1',
+                    description : 'Level 1',
+                    isCompleted : true,
+                },
+                {
+                    id : 2,
+                    name : 'Level 2',
+                    description : 'Level 2',
+                    isCompleted : false,
+                },
+                {
+                    id : 3,
+                    name : 'Level 3',
+                    description : 'Level 3',
+                    isCompleted : false,
+                }
+            ]
+        },
+        {
+            id : 3,
+            name : 'Pattern Painter',
+            description : '',
+            isAuthorizedtoTake : false,
+            challenges : [
+                {
+                    id : 1,
+                    name : 'Level 1',
+                    description : 'Level 1',
+                    isCompleted : false,
+                },
+                {
+                    id : 2,
+                    name : 'Level 2',
+                    description : 'Level 2',
+                    isCompleted : false,
+                },
+                {
+                    id : 3,
+                    name : 'Level 3',
+                    description : 'Level 3',
+                    isCompleted : false,
+                }
+            ]
+        },
+        {
+            id : 4,
+            name : 'Collect the stars',
+            description : '',
+            isAuthorizedtoTake : false,
+            challenges : [
+                {
+                    id : 1,
+                    name : 'Level 1',
+                    description : 'Level 1',
+                    isCompleted : false,
+                },
+                {
+                    id : 2,
+                    name : 'Level 2',
+                    description : 'Level 2',
+                    isCompleted : false,
+                },
+                {
+                    id : 3,
+                    name : 'Level 3',
+                    description : 'Level 3',
+                    isCompleted : false,
+                }
+            ]
+        },
+        {
+            id : 5,
+            name : 'Robot Builder',
+            description : '',
+            isAuthorizedtoTake : false,
+            challenges : [
+                {
+                    id : 1,
+                    name : 'Level 1',
+                    description : 'Level 1',
+                    isCompleted : false,
+                },
+                {
+                    id : 2,
+                    name : 'Level 2',
+                    description : 'Level 2',
+                    isCompleted : false,
+                },
+                {
+                    id : 3,
+                    name : 'Level 3',
+                    description : 'Level 3',
+                    isCompleted : false,
+                }
+            ]
+        }
+    ]
 
-  const runCode = () => {
-    if (workspaceRef.current) {
-      javascriptGenerator.addReservedWords("code");
-      const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
-      console.log(code);
-      if (code) {
-        // eslint-disable-next-line no-eval
-        eval(code);
-      }
+    const gameactionMapper = (game_id : number) : () => void  => {
+        switch (game_id) {
+            case 1:
+                return () => setmazeEscapeOpen(prev => !prev);
+            case 2:
+                return () => settreasureHuntOpen(prev => !prev);
+            case 3:
+                return () => setpatternPainterOpen(prev => !prev);
+            case 4:
+                return () => setcollectTheStarsOpen(prev => !prev)
+            case 5:
+                return () => setrobotBuilderOpen(prev => !prev)
+            default:
+                return () => {};
+        }
     }
-  };
+
+    const getgameactionmapper = (game_id : number) : boolean => {
+        switch(game_id){
+            case 1:
+                return mazeEscapeOpen;
+            case 2:
+                return treasureHuntOpen;
+            case 3:
+                return patternPainterOpen;
+            case 4:
+                return collectTheStarsOpen;
+            case 5:
+                return robotBuilderOpen;
+            default:
+                return false;
+        }
+    }
+
+    const computeOverallScore = (game_id : number) : number => {
+        const game = games.find(g => g.id === game_id);
+        if (!game) return 0;
+
+        const totalChallenges = game.challenges.length;
+        const completedChallenges = game.challenges.filter(challenge => challenge.isCompleted).length;
+
+        return (completedChallenges / totalChallenges) * 100;
+    }
+
+    const [mazeEscapeOpen , setmazeEscapeOpen] = useState<boolean>(false)
+    const [treasureHuntOpen, settreasureHuntOpen] = useState<boolean>(false)
+    const [patternPainterOpen, setpatternPainterOpen] = useState<boolean>(false)
+    const [collectTheStarsOpen, setcollectTheStarsOpen] = useState<boolean>(false)
+    const [robotBuilderOpen, setrobotBuilderOpen] = useState<boolean>(false)
+
 
   return (
-    <div className="App">
-      <h1>Blockly Pin Movement</h1>
-
-      <div className="blockly-container">
-        <BlocklyWorkspace
-          toolboxConfiguration={{
-            kind: "categoryToolbox",
-            contents: [
-              {
-                kind: "category",
-                name: "Actions",
-                colour: "blue",
-                contents: [
-                  { kind: "block", type: "move_pin" },
-                  { kind: "block", type: "move_pin_left_forward" },
-                ],
-              },
-            ],
-          }}
-          workspaceConfiguration={{}}
-          className="fill-height"
-          onWorkspaceChange={(workspace) => {
-            workspaceRef.current = workspace;
-          }}
-        />
+    <>
+      <div className="Blocklyheading">
+        <Typography variant="h5" className="title" color="secondary">
+          BLOCKLY
+        </Typography>
       </div>
+      <div className="BlocklyPanels">
+        <div className="BlocklyGamesPanel">
+          <div className="PanelSubHeading">
+            <Typography variant="h6" color={'secondary'}>Challenges Completed</Typography>
+            <Divider style={{ width: "90%" }} />
+          </div>
+          <div className="PanelChannels">
+                <List>
+                    {games.map((game, index) => (
+                        <React.Fragment key={index}>
+                            <ListItemButton disabled={!game.isAuthorizedtoTake} onClick={gameactionMapper(game.id)}>
+                                <ListItemIcon>
+                                    <CircularProgressWithLabel value={computeOverallScore(game.id)} />
+                                    {/* <span role="img" aria-label="game-icon">🎮</span> */}
+                                </ListItemIcon>
+                                <ListItemText primary={game.name} />
+                                {getgameactionmapper(game.id) ? <ExpandLess /> : <ExpandMore />}
 
-      <button onClick={runCode}>Run Code</button>
-
-      <div className="grid-container">
-        <div
-          className="pin"
-          style={{
-            transform: `translate(${position.x * 50}px, ${position.y * 50}px)`,
-          }}
-        ></div>
+                            </ListItemButton>
+                            <Collapse in={getgameactionmapper(game.id)} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {game.challenges.map((challenge, idx) => (
+                                        <ListItemButton key={idx} sx={{ pl: 4 }}>
+                                            <ListItemIcon>
+                                                <ExtensionIcon color="primary" />
+                                            </ListItemIcon>
+                                            <ListItemText primary={challenge.name} />
+                                            <ListItemIcon>
+                                                <ArrowForwardIosIcon fontSize="small" />
+                                            </ListItemIcon>
+                                        </ListItemButton>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        </React.Fragment>
+                    ))}
+                </List>
+          </div>
+        </div>
+        <div className="BlocklyGamesBoard">
+          <div className="PanelSubHeading">
+            <Typography variant="h6" color={"secondary"}>Challenge LeaderBoard</Typography>
+            <Divider style={{ width: "90%" }} />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
-}
+};
 
-export default App;
+export default page;

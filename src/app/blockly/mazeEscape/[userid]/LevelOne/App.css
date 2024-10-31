@@ -1,0 +1,83 @@
+.App {
+    text-align: center;
+  }
+  
+  .blockly-container {
+    width: 60%;
+    height: 65dvh;
+    border: 1px solid #ccc;
+  }
+
+
+  button {
+    margin: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  
+  .fill-height {
+    height: 100%;
+  }
+  
+  .grid-container {
+    width: 400px;
+    height: 400px;
+    background-color: #f0f0f0;
+    position: relative;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+  }
+  
+  .pin {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: transform 0.5s ease;
+  }
+
+  .mazeOneHeading{
+    height : 15dvh;
+    width : 90dvw;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mazeoneplayGround{
+    height : 70dvh;
+    width : 99dvw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .mazeoneRun {
+    height : 65dvh;
+    width : 38%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .mazeOnePawn{
+    height : 40dvh;
+    width : 30dvw;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .mazeOnePath{
+    position: relative;
+    top : 119px;
+    right : 20px
+
+  }

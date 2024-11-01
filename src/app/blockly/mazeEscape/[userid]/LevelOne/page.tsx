@@ -11,14 +11,26 @@ import { javascriptGenerator } from "blockly/javascript";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Paper , Button } from "@mui/material";
 import { flushSync } from "react-dom";
+import Marker from "@/components/Marker/Marker";
+import Maze from "@/components/Maze/Maze";
+import Target from "@/components/Target";
 
 type Position = {
   x: number;
   y: number;
 };
 
+enum Direction {
+  FORWARD = 20,
+  LEFT = 0,
+  RIGHT = 40,
+  BACKWARD = 60,
+}
+
 function App() {
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
+  const [frame, setFrame] = useState<number>(Direction.FORWARD);
+
   const [completed , setcompleted] = useState<boolean>(false)
   
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
@@ -26,35 +38,50 @@ function App() {
   const initializeBlockly = () => {
     
 
-    Blockly.Blocks['move_pin_forward'] = {
+    Blockly.Blocks['move_forward'] = {
       init: function () {
-        this.appendDummyInput().appendField("Move pin forward");
+        this.appendDummyInput().appendField("Move forward");
         this.setNextStatement(true, null);
         this.setPreviousStatement(true, null);
         this.setColour(230);
-        this.setTooltip("Move pin forward");
+        this.setTooltip("Move forward");
         this.setHelpUrl("");
       }
     }
 
-    Blockly.Blocks['move_pin_left'] = {
+    Blockly.Blocks['turn_left'] = {
       init: function () {
-        this.appendDummyInput().appendField("Move pin left");
+        this.appendDummyInput().appendField("Turn Left");
         this.setNextStatement(true, null);
         this.setPreviousStatement(true, null);
         this.setColour(230);
-        this.setTooltip("Move pin left");
+        this.setTooltip("Turn Left");
+        this.setHelpUrl("");
+      }
+    }
+
+    Blockly.Blocks['turn_right'] = {
+      init: function () {
+        this.appendDummyInput().appendField("Turn right");
+        this.setNextStatement(true, null);
+        this.setPreviousStatement(true, null);
+        this.setColour(230);
+        this.setTooltip("Turn right");
         this.setHelpUrl("");
       }
     }
 
 
-    javascriptGenerator.forBlock["move_pin_forward"] = function () {
-      return "movePinForward();\n"
+    javascriptGenerator.forBlock["move_forward"] = function () {
+      return `moveForward(${frame});\n`
     }
 
-    javascriptGenerator.forBlock["move_pin_left"] = function () {
-      return "movePinLeft();\n"
+    javascriptGenerator.forBlock["turn_left"] = function () {
+      return "turnLeft();\n"
+    }
+
+    javascriptGenerator.forBlock["turn_right"] = function () {
+      return "turnRight();\n"
     }
   };
 
@@ -64,45 +91,123 @@ function App() {
 
   
 
-  const movePinForward = () => {
-    setPosition((prevPos) => ({
-      x : prevPos.x + 4,
-      y: prevPos.y ,
-    }))
-  }
+  const moveForward = (frame : Direction) => {
+    setPosition((prevPos) => {
+      if (frame === Direction.FORWARD) {
+
+        return { x: prevPos.x + 19, y: prevPos.y };
+
+      } else if (frame === Direction.BACKWARD) {
+
+        return { x: prevPos.x - 15, y: prevPos.y };
+
+      } else if (frame === Direction.LEFT) {
+
+        return { x: prevPos.x, y: prevPos.y - 15 };
+
+      } else if (frame === Direction.RIGHT) {
+
+        return { x: prevPos.x, y: prevPos.y + 15 };
+
+      }
+      return prevPos;
+    });
+  };
 
   
 
-  const movePinLeft = () => {
-      setPosition((prevPos) => ({
-        x : prevPos.x ,
-        y: prevPos.y - 4,
-      }))
-    
+  const turnLeft = (current_direction: Direction): Direction => {
+    let newDirection: Direction;
+
+    switch (current_direction) {
+      case Direction.FORWARD:
+        newDirection = Direction.LEFT;
+        break;
+      case Direction.LEFT:
+        newDirection = Direction.BACKWARD;
+        break;
+      case Direction.BACKWARD:
+        newDirection = Direction.RIGHT;
+        break;
+      case Direction.RIGHT:
+        newDirection = Direction.FORWARD;
+        break;
+      default:
+        newDirection = Direction.FORWARD;
+    }
+
+    setFrame(newDirection);
+    return newDirection;
   }
+
+
+  const turnRight = (current_direction: Direction): Direction => {
+    let newDirection: Direction;
+
+    switch (current_direction) {
+      case Direction.FORWARD:
+        newDirection = Direction.RIGHT;
+        break;
+      case Direction.RIGHT:
+        newDirection = Direction.BACKWARD;
+        break;
+      case Direction.BACKWARD:
+        newDirection = Direction.LEFT;
+        break;
+      case Direction.LEFT:
+        newDirection = Direction.FORWARD;
+        break;
+      default:
+        newDirection = Direction.FORWARD;
+    }
+
+    setFrame(newDirection);
+    return newDirection;
+  };
 
   
   const runCode = () => {
     if (workspaceRef.current) {
-      setcompleted(true)
+      setcompleted(true);
       javascriptGenerator.addReservedWords("code");
       const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
       if (code) {
-        const commands = code.split('\n').filter(Boolean);
-        console.log(commands);
-        commands.forEach(command => {
-          // eslint-disable-next-line no-eval
-          flushSync(()=>{
-            eval(command);
-          })
-        });
+        const commands = code.split("\n").filter(Boolean);
+        let current_direction : Direction = Direction.FORWARD
+        console.log(commands)
+        let i = 0;
+        const interval = setInterval(() => {
+          if (i >= commands.length) {
+            clearInterval(interval);
+            return;
+          }
+          flushSync(() => {
+            // eslint-disable-next-line no-eval
+            // eval(commands[i]);
+            if (commands[i].includes('moveForward')){
+              moveForward(current_direction);
+            }
+
+            if (commands[i].includes('turnLeft')){
+              current_direction = turnLeft(current_direction);
+            }
+
+            if (commands[i].includes('turnRight')){
+              current_direction = turnRight(current_direction);
+            }
+            
+          });
+          i++;
+        }, 500); 
       }
     }
   };
+  
 
   const resetProgram = () => {
     setPosition({x : 0 , y : 0})
     setcompleted(false)
+    setFrame(Direction.FORWARD)
   }
 
   return (
@@ -126,8 +231,9 @@ function App() {
                   name: "Actions",
                   colour: "blue",
                   contents: [
-                    { kind: "block", type: "move_pin_forward" },
-                    { kind: "block", type: "move_pin_left"}
+                    { kind: "block", type: "move_forward" },
+                    { kind: "block", type: "turn_left"},
+                    { kind: "block", type: "turn_right"}
                   ],
                 },
               ],
@@ -141,42 +247,46 @@ function App() {
         </Paper>
 
         <Paper className="mazeoneRun">
-              {/* <circle cx="5" cy="10" r="3" fill="black" /> */}
             <div className={"mazeOnePawn"}>
-                <Image style ={{
-                  position : 'relative',
-                  transition: 'transform 0.5s ease-in-out',
-                  transform: `translate(${position.x * 50}px, ${position.y * 50}px)`,
-                }} src="/challengeicons/pawn.png" alt="logo" width={50} height={50}/>
+                <Marker frame={frame} position={position}/>
 
-                <svg className="mazeOnePath" width="200" height="200">
-                    <line
-                    x1="10"
-                    y1="10"
-                    x2="190"
-                    y2="10"
-                    stroke="black"
-                    strokeWidth="2"
-                    />
-                </svg>
+                <Maze 
+                    grid={
+                      [
+                        [
+                          {type : 'path'},
 
-                
+                        ],
+                        [
+                          {type : 'path'},
+
+                        ],
+                        [
+                          {type : 'path'},
+
+                        ],
+                        [
+                          {type : 'path'},
+
+                        ],
+                        [
+                          {type : 'path'},
+
+                        ],
+                        
+                      ]
+                    }
+                />
+
+                <Target top={'45dvh'} right={'11.5dvw'}/>
+
             </div>
               
         </Paper>
       </div>
 
       
-      {/* <button onClick={runCode}>Run Code</button>
-
-      <div className="grid-container">
-        <div
-          className="pin"
-          style={{
-            transform: `translate(${position.x * 50}px, ${position.y * 50}px)`,
-          }}
-        ></div>
-      </div> */}
+      
     </div>
   );
 }

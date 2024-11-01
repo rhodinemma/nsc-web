@@ -10,6 +10,7 @@ export const Header = () => {
 
     return (
         <div className="header">
+
             <div className="titleContent">
                 {/* <Image src="/icons/maze.jpg" alt="logo" width={50} height={50}/> */}
                 <Typography variant="h4" className="title">NSC</Typography>

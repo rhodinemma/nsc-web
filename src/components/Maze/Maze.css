@@ -1,0 +1,35 @@
+.maze {
+    display: grid;
+    grid-template-columns: repeat(5, 60px); 
+    gap: 0px;
+    height: 20dvh;
+    width: 30dvw;
+}
+
+.row {
+    display: flex;
+}
+
+.cell {
+    width: 60px; 
+    height: 25px;
+}
+
+.cell.path {
+    background-color: #f0e68c;
+}
+
+.cell.obstacle {
+    background-color: #d3d3d3;
+}
+
+/* .cell.start {
+    background-image: url('/path/to/pegman.png');
+    background-size: cover;
+}
+
+.cell.end {
+    background-image: url('/path/to/marker.png');
+    background-size: cover;
+}
+*/

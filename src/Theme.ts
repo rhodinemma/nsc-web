@@ -5,15 +5,14 @@ import { createTheme } from '@mui/material/styles';
 export const PrimaryTheme = createTheme({
   palette: {
     primary: {
-      main: '#402039',
+      main: '#0A1045',
     },
     secondary: {
       main: '#363636',
     },
     background: {
-      paper : "#E9EAEE",
-      default : "#E9EAEE",
-      
+      paper: "#E9EAEE",
+      default: "#E9EAEE",
     },
     action: {
       active: "#590925",
@@ -25,8 +24,8 @@ export const PrimaryTheme = createTheme({
     }
   },
   typography: {
-    fontFamily: 'Figtree, sans-serif',
-    fontSize: 15,
+    fontFamily: 'Teachers, sans-serif',
+    fontSize: 16,
   },
 
 });

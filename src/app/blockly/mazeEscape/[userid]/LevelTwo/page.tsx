@@ -14,6 +14,7 @@ import { flushSync } from "react-dom";
 import Marker from "@/components/Marker/Marker";
 import Maze from "@/components/Maze/Maze";
 import Target from "@/components/Target";
+import gridTwo from "@/components/MazeGrids/gridTwo";
 
 type Position = {
   x: number;
@@ -99,15 +100,15 @@ function App() {
 
       } else if (frame === Direction.BACKWARD) {
 
-        return { x: prevPos.x - 15, y: prevPos.y };
+        return { x: prevPos.x - 19, y: prevPos.y };
 
       } else if (frame === Direction.LEFT) {
 
-        return { x: prevPos.x, y: prevPos.y - 15 };
+        return { x: prevPos.x, y: prevPos.y - 19 };
 
       } else if (frame === Direction.RIGHT) {
 
-        return { x: prevPos.x, y: prevPos.y + 15 };
+        return { x: prevPos.x, y: prevPos.y + 19 };
 
       }
       return prevPos;
@@ -214,7 +215,7 @@ function App() {
     <div className="App">
 
       <div className="mazeOneHeading">
-        <h1>Level One</h1>
+        <h1>Level Two</h1>
         <Button onClick={completed ? resetProgram : runCode} variant="contained" endIcon={<PlayArrowIcon />}>
           {completed? ("Reset Space") : ("Run Program")}
         </Button>
@@ -251,73 +252,10 @@ function App() {
                 <Marker frame={frame} position={position}/>
 
                 <Maze 
-                    grid={
-                      [
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                      ]
-                    }
+                    grid={gridTwo}
                 />
 
-                <Target top={'-13dvh'} right={'1dvw'}/>
+                <Target top={'8.8dvh'} right={'2.9dvw'}/>
 
             </div>
               

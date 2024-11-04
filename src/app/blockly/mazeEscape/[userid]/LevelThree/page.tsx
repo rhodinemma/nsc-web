@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import * as Blockly from "blockly";
 import { BlocklyWorkspace } from "react-blockly";
 import { forwardRef } from "react";
-import "./App.css";
+import "./page.css";
 import Image from 'next/image'
 import { javascriptGenerator } from "blockly/javascript";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -14,6 +14,7 @@ import { flushSync } from "react-dom";
 import Marker from "@/components/Marker/Marker";
 import Maze from "@/components/Maze/Maze";
 import Target from "@/components/Target";
+import gridThree from "@/components/MazeGrids/gridThree";
 
 type Position = {
   x: number;
@@ -95,19 +96,19 @@ function App() {
     setPosition((prevPos) => {
       if (frame === Direction.FORWARD) {
 
-        return { x: prevPos.x + 19, y: prevPos.y };
+        return { x: prevPos.x + 10, y: prevPos.y };
 
       } else if (frame === Direction.BACKWARD) {
 
-        return { x: prevPos.x - 15, y: prevPos.y };
+        return { x: prevPos.x - 19, y: prevPos.y };
 
       } else if (frame === Direction.LEFT) {
 
-        return { x: prevPos.x, y: prevPos.y - 15 };
+        return { x: prevPos.x, y: prevPos.y - 19 };
 
       } else if (frame === Direction.RIGHT) {
 
-        return { x: prevPos.x, y: prevPos.y + 15 };
+        return { x: prevPos.x, y: prevPos.y + 19 };
 
       }
       return prevPos;
@@ -214,7 +215,7 @@ function App() {
     <div className="App">
 
       <div className="mazeOneHeading">
-        <h1>Level One</h1>
+        <h1>Level Three</h1>
         <Button onClick={completed ? resetProgram : runCode} variant="contained" endIcon={<PlayArrowIcon />}>
           {completed? ("Reset Space") : ("Run Program")}
         </Button>
@@ -251,73 +252,10 @@ function App() {
                 <Marker frame={frame} position={position}/>
 
                 <Maze 
-                    grid={
-                      [
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                        [
-                          {type : 'path'},
-
-                        ],
-                      ]
-                    }
+                    grid={gridThree}
                 />
 
-                <Target top={'-13dvh'} right={'1dvw'}/>
+                <Target top={'-14dvh'} right={'1.3dvw'}/>
 
             </div>
               

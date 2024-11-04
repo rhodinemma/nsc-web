@@ -171,7 +171,7 @@ const Dashboard = () => {
               </Grid>
             </Box>
 
-            <Box sx={{ mt: 4, mb: 4 }}>
+            {/* <Box sx={{ mt: 4, mb: 4 }}>
               <Box
                 sx={{
                   mb: 4,
@@ -202,7 +202,7 @@ const Dashboard = () => {
                   ))}
                 </Grid>
               </Box>
-            </Box>
+            </Box> */}
           </Grid>
 
           {/* Right Section - Announcements */}

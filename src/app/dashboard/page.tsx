@@ -70,7 +70,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <Box sx={{ padding: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
           Welcome, Rhodin !
@@ -229,7 +229,7 @@ const Dashboard = () => {
                 ))}
               </Box>
             </Box>
-            <Footer />
+            {/* <Footer /> */}
           </Grid>
         </Grid>
       </Box>

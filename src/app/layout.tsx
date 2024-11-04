@@ -3,6 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@mui/material";
 import { PrimaryTheme } from "@/Theme";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
 
 export const metadata: Metadata = {
   title: "NSC PLATFORM",
@@ -19,7 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ margin: "0px" }}>
         <ThemeProvider theme={PrimaryTheme}>
+          <Navbar/>
           <main>{children}</main>
+          <Footer/>
         </ThemeProvider>
       </body>
     </html>

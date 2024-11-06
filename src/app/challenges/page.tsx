@@ -12,6 +12,8 @@ import {
   ListItemText,
   Collapse,
   Box,
+  Card,
+  CardContent,
 } from "@mui/material";
 
 import CircularProgress, {
@@ -68,7 +70,7 @@ function CircularProgressWithLabel(
   );
 }
 
-export const page = () => {
+const Challenges = () => {
   const games: Game[] = [
     {
       id: 1,
@@ -81,21 +83,28 @@ export const page = () => {
           name: "Level 1",
           description: "Level 1",
           isCompleted: true,
-          path: "/maze-escape/1",
+          path: "/maze-escape/level-one",
         },
         {
           id: 2,
           name: "Level 2",
           description: "Level 2",
           isCompleted: true,
-          path: "/maze-escape/2",
+          path: "/maze-escape/level-two",
         },
         {
           id: 3,
           name: "Level 3",
           description: "Level 3",
           isCompleted: true,
-          path: "/maze-escape/3",
+          path: "/maze-escape/level-three",
+        },
+        {
+          id: 4,
+          name: "Level 4",
+          description: "Level 4",
+          isCompleted: true,
+          path: "/maze-escape/level-four",
         },
       ],
     },
@@ -103,13 +112,13 @@ export const page = () => {
       id: 2,
       name: "Treasure Hunt",
       description: "",
-      isAuthorizedtoTake: true,
+      isAuthorizedtoTake: false,
       challenges: [
         {
           id: 1,
           name: "Level 1",
           description: "Level 1",
-          isCompleted: true,
+          isCompleted: false,
           path: "/treasure-hunt/1",
         },
         {
@@ -273,86 +282,167 @@ export const page = () => {
   const router = useRouter();
 
   const handleNavigation = (path: string) => {
-    router.push(`/challenge/${path}`);
+    router.push(`/challenges/${path}`);
   };
 
   return (
     <>
       <Navbar />
 
-      <div className="Blocklyheading">
-        <Typography variant="h5" className="title" color="secondary">
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography
+          variant="h5"
+          className="title"
+          color="secondary"
+          sx={{ margin: "2rem 0 2rem 0" }}
+        >
           Code Challenges
         </Typography>
-      </div>
-      <div className="BlocklyPanels">
-        <div className="BlocklyGamesPanel">
-          <div className="PanelSubHeading">
-            <Typography variant="h6" color={"secondary"}>
-              Your Progress
-            </Typography>
-            <Divider style={{ width: "90%" }} />
-          </div>
-          <div className="PanelChannels">
-            <List>
-              {games.map((game, index) => (
-                <React.Fragment key={index}>
-                  <ListItemButton
-                    disabled={!game.isAuthorizedtoTake}
-                    onClick={gameactionMapper(game.id)}
-                  >
-                    <ListItemIcon>
-                      <CircularProgressWithLabel
-                        value={computeOverallScore(game.id)}
-                      />
-                      {/* <span role="img" aria-label="game-icon">🎮</span> */}
-                    </ListItemIcon>
-                    <ListItemText primary={game.name} />
-                    {getgameactionmapper(game.id) ? (
-                      <ExpandLess />
-                    ) : (
-                      <ExpandMore />
-                    )}
-                  </ListItemButton>
-                  <Collapse
-                    in={getgameactionmapper(game.id)}
-                    timeout="auto"
-                    unmountOnExit
-                  >
-                    <List component="div" disablePadding>
-                      {game.challenges.map((challenge, idx) => (
-                        <ListItemButton
-                          key={idx}
-                          sx={{ pl: 4 }}
-                          onClick={() => handleNavigation(challenge.path)}
-                        >
-                          <ListItemIcon>
-                            <ExtensionIcon color="primary" />
-                          </ListItemIcon>
-                          <ListItemText primary={challenge.name} />
-                          <ListItemIcon>
-                            <ArrowForwardIosIcon fontSize="small" />
-                          </ListItemIcon>
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Collapse>
-                </React.Fragment>
-              ))}
-            </List>
-          </div>
+
+        <Card
+          sx={{
+            width: "80%",
+            maxWidth: 600,
+            backgroundColor: "#f5f5f5",
+            padding: 3,
+            borderRadius: 2,
+          }}
+        >
+          <CardContent>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              width="100%"
+            >
+              <Typography variant="h6" color="secondary">
+                Your Progress
+              </Typography>
+              <Divider sx={{ width: "90%", mb: 2 }} />
+            </Box>
+
+            <Box display="flex" flexDirection="column" width="100%">
+              <List>
+                {games.map((game, index) => (
+                  <React.Fragment key={index}>
+                    <ListItemButton
+                      disabled={!game.isAuthorizedtoTake}
+                      onClick={gameactionMapper(game.id)}
+                    >
+                      <ListItemIcon>
+                        <CircularProgressWithLabel
+                          value={computeOverallScore(game.id)}
+                        />
+                      </ListItemIcon>
+                      <ListItemText primary={game.name} />
+                      {getgameactionmapper(game.id) ? (
+                        <ExpandLess />
+                      ) : (
+                        <ExpandMore />
+                      )}
+                    </ListItemButton>
+                    <Collapse
+                      in={getgameactionmapper(game.id)}
+                      timeout="auto"
+                      unmountOnExit
+                    >
+                      <List component="div" disablePadding>
+                        {game.challenges.map((challenge, idx) => (
+                          <ListItemButton
+                            key={idx}
+                            sx={{ pl: 4 }}
+                            onClick={() => handleNavigation(challenge.path)}
+                          >
+                            <ListItemIcon>
+                              <ExtensionIcon color="primary" />
+                            </ListItemIcon>
+                            <ListItemText primary={challenge.name} />
+                            <ListItemIcon>
+                              <ArrowForwardIosIcon fontSize="small" />
+                            </ListItemIcon>
+                          </ListItemButton>
+                        ))}
+                      </List>
+                    </Collapse>
+                  </React.Fragment>
+                ))}
+              </List>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+      {/* <div className="BlocklyPanels"> */}
+      {/* <div className="BlocklyGamesPanel">
+        <div className="PanelSubHeading">
+          <Typography variant="h6" color={"secondary"}>
+            Your Progress
+          </Typography>
+          <Divider style={{ width: "90%" }} />
         </div>
-        <div className="BlocklyGamesBoard">
+        <div className="PanelChannels">
+          <List>
+            {games.map((game, index) => (
+              <React.Fragment key={index}>
+                <ListItemButton
+                  disabled={!game.isAuthorizedtoTake}
+                  onClick={gameactionMapper(game.id)}
+                >
+                  <ListItemIcon>
+                    <CircularProgressWithLabel
+                      value={computeOverallScore(game.id)}
+                    />
+                  </ListItemIcon>
+                  <ListItemText primary={game.name} />
+                  {getgameactionmapper(game.id) ? (
+                    <ExpandLess />
+                  ) : (
+                    <ExpandMore />
+                  )}
+                </ListItemButton>
+                <Collapse
+                  in={getgameactionmapper(game.id)}
+                  timeout="auto"
+                  unmountOnExit
+                >
+                  <List component="div" disablePadding>
+                    {game.challenges.map((challenge, idx) => (
+                      <ListItemButton
+                        key={idx}
+                        sx={{ pl: 4 }}
+                        onClick={() => handleNavigation(challenge.path)}
+                      >
+                        <ListItemIcon>
+                          <ExtensionIcon color="primary" />
+                        </ListItemIcon>
+                        <ListItemText primary={challenge.name} />
+                        <ListItemIcon>
+                          <ArrowForwardIosIcon fontSize="small" />
+                        </ListItemIcon>
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            ))}
+          </List>
+        </div>
+      </div> */}
+      {/* <div className="BlocklyGamesBoard">
           <div className="PanelSubHeading">
             <Typography variant="h6" color={"secondary"}>
               Challenge LeaderBoard
             </Typography>
             <Divider style={{ width: "90%" }} />
           </div>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
     </>
   );
 };
 
-export default page;
+export default Challenges;

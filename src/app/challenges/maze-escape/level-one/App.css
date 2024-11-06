@@ -40,8 +40,8 @@ button {
 
 .mazeOneHeading {
   height: 15dvh;
-  /* width: 90dvw; */
-  /* margin-left: 20px; */
+  width: 90dvw;
+  margin-left: 20px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -58,31 +58,20 @@ button {
 }
 
 .mazeoneRun {
-  /* height: 65dvh;
-  width: 38%; */
-  height: 65vh;
-  /* Ensure the height is responsive */
-  width: 38vw;
-  /* Set width with vw for consistency */
-  position: relative;
-  /* Relative positioning for absolute children */
+  height: 65dvh;
+  width: 38%;
   display: flex;
-  /* flex-direction: row; */
+  flex-direction: row;
   justify-content: center;
   align-items: center;
 }
 
 .mazeOnePawn {
-  /* height: 40dvh; */
-  height: 100%;
-  /* Fill the parent container */
-  /* width: 30dvw; */
-  width: 100%;
-  position: relative;
-  /* Relative position for child absolute elements */
+  height: 40dvh;
+  width: 30dvw;
   display: flex;
-  /* flex-direction: row; */
-  justify-content: center;
+  flex-direction: row;
+  justify-content: flex-start;
   align-items: center;
 }
 

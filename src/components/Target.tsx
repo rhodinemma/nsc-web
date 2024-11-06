@@ -14,7 +14,7 @@ export const Target = ({top , right} : Position) => {
             width={20}
             height={30}
             style={{
-                position : 'absolute',
+                position : 'relative',
                 top : top,
                 right : right,
             }}

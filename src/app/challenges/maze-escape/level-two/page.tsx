@@ -11,13 +11,13 @@ import { javascriptGenerator } from "blockly/javascript";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { Paper, Button, Box, Typography } from "@mui/material";
 import { flushSync } from "react-dom";
-// import Marker from "@/components/Marker/Marker";
+import Marker from "@/components/Marker/Marker";
 import Maze from "@/components/Maze/Maze";
 import Target from "@/components/Target";
+import gridTwo from "@/components/MazeGrids/gridTwo";
 import Navbar from "@/components/Navbar";
 import { ArrowBack } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import Marker from "@/components/Marker/Marker";
 
 type Position = {
   x: number;
@@ -31,11 +31,8 @@ enum Direction {
   BACKWARD = 60,
 }
 
-function App({ params }: { params: { slug: string } }) {
-  const { slug } = params;
-
+function App() {
   const router = useRouter();
-
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [frame, setFrame] = useState<number>(Direction.FORWARD);
 
@@ -99,11 +96,11 @@ function App({ params }: { params: { slug: string } }) {
       if (frame === Direction.FORWARD) {
         return { x: prevPos.x + 19, y: prevPos.y };
       } else if (frame === Direction.BACKWARD) {
-        return { x: prevPos.x - 15, y: prevPos.y };
+        return { x: prevPos.x - 19, y: prevPos.y };
       } else if (frame === Direction.LEFT) {
-        return { x: prevPos.x, y: prevPos.y - 15 };
+        return { x: prevPos.x, y: prevPos.y - 19 };
       } else if (frame === Direction.RIGHT) {
-        return { x: prevPos.x, y: prevPos.y + 15 };
+        return { x: prevPos.x, y: prevPos.y + 19 };
       }
       return prevPos;
     });
@@ -252,7 +249,7 @@ function App({ params }: { params: { slug: string } }) {
               variant="h3"
               sx={{ fontWeight: "bold", position: "relative", zIndex: 2 }}
             >
-              Maze Escape / Level {slug}
+              Maze Escape / Level 2
             </Typography>
             <Button
               size="large"
@@ -272,8 +269,8 @@ function App({ params }: { params: { slug: string } }) {
                   contents: [
                     {
                       kind: "category",
-                      name: "Click here for blocks",
-                      colour: "#0A1045",
+                      name: "Actions",
+                      colour: "blue",
                       contents: [
                         { kind: "block", type: "move_forward" },
                         { kind: "block", type: "turn_left" },
@@ -294,17 +291,9 @@ function App({ params }: { params: { slug: string } }) {
               <div className={"mazeOnePawn"}>
                 <Marker frame={frame} position={position} />
 
-                <Maze
-                  grid={[
-                    [{ type: "path" }],
-                    [{ type: "path" }],
-                    [{ type: "path" }],
-                    [{ type: "path" }],
-                    [{ type: "path" }],
-                  ]}
-                />
+                <Maze grid={gridTwo} />
 
-                <Target top={"36dvh"} right={"11.5dvw"} />
+                <Target top={"8.8dvh"} right={"2.9dvw"} />
               </div>
             </Paper>
           </div>

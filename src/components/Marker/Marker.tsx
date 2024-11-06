@@ -9,6 +9,7 @@ interface MarkerProps {
     position: { x: number; y: number };
 }
 
+
 //Frames are factors of 15
 
 const Marker: React.FC<MarkerProps> = ({ frame, position }) => {
@@ -16,9 +17,9 @@ const Marker: React.FC<MarkerProps> = ({ frame, position }) => {
         <div style={{
             maxHeight: '20dvh',
             width: '40dvw',
-            position: 'absolute',
-            left : '46dvw',
-            top : '21dvw',
+            position: 'relative',
+            left : '4dvw',
+            top : '-6dvh',
         }}>
             <img
             src="/challengeicons/pegman.png"

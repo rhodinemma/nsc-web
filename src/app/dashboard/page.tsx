@@ -11,8 +11,11 @@ import {
 } from "@mui/material";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ArrowForwardIos } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
 const Dashboard = () => {
+  const router = useRouter();
   const cardStyle = {
     position: "relative",
     height: "100%",
@@ -21,16 +24,6 @@ const Dashboard = () => {
     backgroundPosition: "40% 60%",
     color: "#fff",
     overflow: "hidden",
-  };
-
-  const overlayStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    backdropFilter: "blur(5px)",
   };
 
   const completedChallenges = 15;
@@ -60,17 +53,18 @@ const Dashboard = () => {
     },
   ];
 
-  const leaderboardData = [
-    { name: "Alice", score: 95 },
-    { name: "Bob", score: 90 },
-    { name: "Charlie", score: 85 },
-    { name: "Diana", score: 80 },
-    { name: "Ethan", score: 75 },
-  ];
+  // const leaderboardData = [
+  //   { name: "Alice", score: 95 },
+  //   { name: "Bob", score: 90 },
+  //   { name: "Charlie", score: 85 },
+  //   { name: "Diana", score: 80 },
+  //   { name: "Ethan", score: 75 },
+  // ];
 
   return (
     <>
-      {/* <Navbar /> */}
+      <Navbar />
+
       <Box sx={{ padding: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
           Welcome, Rhodin !
@@ -140,12 +134,34 @@ const Dashboard = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
                   <Card sx={cardStyle}>
-                    <Box style={overlayStyle}></Box>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        backdropFilter: "blur(5px)",
+                      }}
+                    ></Box>
                     {/* Overlay for blur effect */}
                     <CardContent sx={{ position: "relative", zIndex: 1 }}>
-                      <Typography variant="h6" gutterBottom>
-                        Blockly Challenges
-                      </Typography>
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        mb={1}
+                        onClick={() => router.push("/challenges")}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <Typography variant="h6" gutterBottom>
+                          Blockly Challenges
+                        </Typography>
+                        <ArrowForwardIos
+                          fontSize="small"
+                          sx={{ ml: 1, mb: 1 }}
+                        />
+                      </Box>
                       <Typography variant="body2">
                         Start with exciting Blockly challenges to learn the
                         basics of coding through fun and interactive puzzles!
@@ -155,12 +171,34 @@ const Dashboard = () => {
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Card sx={cardStyle}>
-                    <div style={overlayStyle}></div>{" "}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        backdropFilter: "blur(5px)",
+                      }}
+                    ></Box>
                     {/* Overlay for blur effect */}
                     <CardContent sx={{ position: "relative", zIndex: 1 }}>
-                      <Typography variant="h6" gutterBottom>
-                        Build a Scratch Project
-                      </Typography>
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        mb={1}
+                        onClick={() => router.push("/build-project")}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <Typography variant="h6" gutterBottom>
+                          Build a Scratch Project
+                        </Typography>
+                        <ArrowForwardIos
+                          fontSize="small"
+                          sx={{ ml: 1, mb: 1 }}
+                        />
+                      </Box>
                       <Typography variant="body2">
                         Unleash your creativity by building your own projects
                         with Scratch. Design games, animations, and more!
@@ -229,7 +267,7 @@ const Dashboard = () => {
                 ))}
               </Box>
             </Box>
-            {/* <Footer /> */}
+            <Footer />
           </Grid>
         </Grid>
       </Box>

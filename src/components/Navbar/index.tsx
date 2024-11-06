@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -6,7 +6,6 @@ import {
   Toolbar,
   IconButton,
   Typography,
-  Button,
   Drawer,
   List,
   ListItem,
@@ -35,7 +34,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard" },
-    { name: "Code Challenge", path: "/challenge" },
+    { name: "Code Challenge", path: "/challenges" },
     { name: "Build a Project", path: "/build-project" },
     { name: "Logout", path: "/logout" },
   ];

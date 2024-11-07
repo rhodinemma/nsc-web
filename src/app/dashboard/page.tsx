@@ -7,7 +7,6 @@ import {
   Typography,
   Grid,
   LinearProgress,
-  Divider,
 } from "@mui/material";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";

@@ -21,6 +21,7 @@ import {
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import useParticipantStore from "@/store/participantStore";
+import { toast } from "sonner";
 
 const Login = () => {
   const { setUsername, setUserEmail, setToken } = useParticipantStore();
@@ -57,6 +58,8 @@ const Login = () => {
         }
       );
 
+      toast.success("Login successful!");
+
       setToken(response.data?.access_token);
       setUsername(response.data.user?.name);
       setUserEmail(response.data.user?.email);
@@ -64,6 +67,7 @@ const Login = () => {
       // Redirect to the dashboard
       router.push("/dashboard");
     } catch (err) {
+      toast.error("Failed to login!");
       console.error("Error during login:", err);
     } finally {
       setLoading(false);

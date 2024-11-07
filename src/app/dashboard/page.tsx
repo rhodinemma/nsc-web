@@ -39,20 +39,20 @@ const Dashboard = () => {
   const levelProgress = (completedLevels / totalLevels) * 100;
   const projectProgress = (completedProjects / totalProjects) * 100;
 
-  const announcements = [
-    {
-      date: "November 1, 2024",
-      text: "Join our weekly coding challenge for a chance to win fun prizes!",
-    },
-    {
-      date: "October 30, 2024",
-      text: "Check out new Scratch tutorials added this week!",
-    },
-    {
-      date: "October 28, 2024",
-      text: "Don't forget to complete your coding exercises by Friday.",
-    },
-  ];
+  // const announcements = [
+  //   {
+  //     date: "November 1, 2024",
+  //     text: "Join our weekly coding challenge for a chance to win fun prizes!",
+  //   },
+  //   {
+  //     date: "October 30, 2024",
+  //     text: "Check out new Scratch tutorials added this week!",
+  //   },
+  //   {
+  //     date: "October 28, 2024",
+  //     text: "Don't forget to complete your coding exercises by Friday.",
+  //   },
+  // ];
 
   // const leaderboardData = [
   //   { name: "Alice", score: 95 },

@@ -28,11 +28,11 @@ const Dashboard = () => {
     overflow: "hidden",
   };
 
-  const completedChallenges = 15;
+  const completedChallenges = 0;
   const totalChallenges = 20;
-  const completedLevels = 3;
+  const completedLevels = 0;
   const totalLevels = 5;
-  const completedProjects = 2;
+  const completedProjects = 0;
   const totalProjects = 5;
 
   // Calculate progress percentages
@@ -254,8 +254,20 @@ const Dashboard = () => {
                 Announcements
               </Typography>
               <Box sx={{ position: "relative" }}>
-                {announcements.map((announcement, index) => (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    display: "flex",
+                    justifyContent: "center",
+                    py: 4,
+                  }}
+                >
+                  No announcements found
+                </Typography>
+                {/* {announcements.map((announcement, index) => (
                   <Box key={index} sx={{ mb: 3, position: "relative" }}>
+                    
                     <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
                       {announcement.date}
                     </Typography>
@@ -266,7 +278,7 @@ const Dashboard = () => {
                       <Divider sx={{ my: 2 }} />
                     )}
                   </Box>
-                ))}
+                ))} */}
               </Box>
             </Box>
             <Footer />

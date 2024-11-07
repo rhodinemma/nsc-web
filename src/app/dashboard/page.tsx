@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -13,10 +13,23 @@ import Footer from "@/components/Footer";
 import { ArrowForwardIos } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import useParticipantStore from "@/store/participantStore";
+import api from "@/api/api";
 
 const Dashboard = () => {
-  const { username } = useParticipantStore();
+  const { username, email } = useParticipantStore();
+
   const router = useRouter();
+
+  const [completedChallenges, setCompletedChallenges] = useState(0);
+  const [totalChallenges, setTotalChallenges] = useState(0);
+  const [challengeProgress, setChallengeProgress] = useState(0);
+  const [completedLevels, setCompletedLevels] = useState(0);
+  const [totalLevels, setTotalLevels] = useState(0);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [completedProjects, setCompletedProjects] = useState(0);
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [projectProgress, setProjectProgress] = useState(0);
+
   const cardStyle = {
     position: "relative",
     height: "100%",
@@ -27,17 +40,42 @@ const Dashboard = () => {
     overflow: "hidden",
   };
 
-  const completedChallenges = 0;
-  const totalChallenges = 20;
-  const completedLevels = 0;
-  const totalLevels = 5;
-  const completedProjects = 0;
-  const totalProjects = 5;
+  useEffect(() => {
+    if (email && username) {
+      const fetchProgress = async () => {
+        try {
+          const { data } = await api.post("/progress/participant-summary", {
+            email: email,
+            name: username,
+          });
 
-  // Calculate progress percentages
-  const challengeProgress = (completedChallenges / totalChallenges) * 100;
-  const levelProgress = (completedLevels / totalLevels) * 100;
-  const projectProgress = (completedProjects / totalProjects) * 100;
+          const summary = data.data;
+
+          setCompletedChallenges(summary.challenges.completed);
+          setTotalChallenges(summary.challenges.total);
+          setChallengeProgress(
+            (summary.challenges.completed / summary.challenges.total) * 100
+          );
+
+          setCompletedLevels(summary.levels.completed);
+          setTotalLevels(summary.levels.total);
+          setLevelProgress(
+            (summary.levels.completed / summary.levels.total) * 100
+          );
+
+          setCompletedProjects(summary.projects.completed);
+          setTotalProjects(summary.projects.total);
+          setProjectProgress(
+            (summary.projects.completed / summary.projects.total) * 100
+          );
+        } catch (error) {
+          console.error("Error fetching progress:", error);
+        }
+      };
+
+      fetchProgress();
+    }
+  }, [email, username]);
 
   // const announcements = [
   //   {

@@ -61,7 +61,7 @@ const Navbar = () => {
       <AppBar position="static" sx={{ position: "relative", zIndex: 2 }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            National Scratch Competition
+            NSC2025
           </Typography>
           <Box sx={{ display: { xs: "none", md: "flex" } }}>
             {navItems.map((item) => (

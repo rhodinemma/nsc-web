@@ -16,12 +16,18 @@ import {
   Select,
   TextField,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import useParticipantStore from "@/store/participantStore";
 
 const Login = () => {
+  const { setUsername, setUserEmail, setToken } = useParticipantStore();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [open, setOpen] = useState(false);
   const [registrationSection, setRegistrationSection] = useState("");
@@ -29,9 +35,9 @@ const Login = () => {
   const [schoolSection, setSchoolSection] = useState("");
   const [consentGiven, setConsentGiven] = useState(false);
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
+  // const handleOpen = () => {
+  //   setOpen(true);
+  // };
 
   const handleClose = () => {
     setOpen(false);
@@ -39,8 +45,29 @@ const Login = () => {
 
   const router = useRouter();
 
-  const handleSubmit = () => {
-    router.push("/dashboard");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        "https://api.nationalscratchcompetition.org/api/login",
+        {
+          username: email,
+          password,
+        }
+      );
+
+      setToken(response.data?.access_token);
+      setUsername(response.data.user?.name);
+      setUserEmail(response.data.user?.email);
+
+      // Redirect to the dashboard
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Error during login:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -160,22 +187,27 @@ const Login = () => {
                 color="primary"
                 fullWidth
                 sx={{ mt: 2 }}
-                // type="submit"
+                type="submit"
                 onClick={handleSubmit}
+                disabled={loading}
               >
-                Submit
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </Box>
-            <Typography variant="body2" align="center">
+            {/* <Typography variant="body2" align="center">
               <a href="#" onClick={handleOpen} style={{ color: "#304ffe" }}>
                 Have no account? Click here to register
               </a>
-            </Typography>
-            <Typography variant="body2" align="center">
+            </Typography> */}
+            {/* <Typography variant="body2" align="center">
               <a href="#" style={{ color: "#304ffe" }}>
                 Forgot your password?
               </a>
-            </Typography>
+            </Typography> */}
           </Box>
         </Grid>
       </Grid>

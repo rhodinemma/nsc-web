@@ -36,6 +36,9 @@ function App() {
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [frame, setFrame] = useState<number>(Direction.FORWARD);
 
+  // console log position to get final position to score participant
+  // assert position
+
   const [completed, setcompleted] = useState<boolean>(false);
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
@@ -183,6 +186,8 @@ function App() {
             if (commands[i].includes("turnRight")) {
               current_direction = turnRight(current_direction);
             }
+
+            // if maybe i=command.length, check final position is destination
           });
           i++;
         }, 500);

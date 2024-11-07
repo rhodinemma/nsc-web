@@ -13,8 +13,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowForwardIos } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import useParticipantStore from "@/store/participantStore";
 
 const Dashboard = () => {
+  const { username } = useParticipantStore();
   const router = useRouter();
   const cardStyle = {
     position: "relative",
@@ -67,7 +69,7 @@ const Dashboard = () => {
 
       <Box sx={{ padding: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
-          Welcome, Rhodin !
+          Welcome, {username} !
         </Typography>
         <Grid container spacing={4}>
           {/* Left Section */}

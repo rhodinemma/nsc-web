@@ -39,9 +39,21 @@ const Navbar = () => {
     { name: "Logout", path: "/logout" },
   ];
 
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.clear();
+
+    // Redirect to the index route
+    router.push("/");
+  };
+
   const handleNavigation = (path: string) => {
-    router.push(path);
-    setDrawerOpen(false);
+    if (path === "/logout") {
+      handleLogout();
+    } else {
+      router.push(path);
+      setDrawerOpen(false);
+    }
   };
 
   return (

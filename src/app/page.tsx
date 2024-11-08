@@ -202,11 +202,11 @@ const Login = () => {
                 )}
               </Button>
             </Box>
-            {/* <Typography variant="body2" align="center">
+            <Typography variant="body2" align="center">
               <a href="#" onClick={handleOpen} style={{ color: "#304ffe" }}>
                 Have no account? Click here to register
               </a>
-            </Typography> */}
+            </Typography>
             {/* <Typography variant="body2" align="center">
               <a href="#" style={{ color: "#304ffe" }}>
                 Forgot your password?

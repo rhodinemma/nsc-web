@@ -13,7 +13,8 @@ import Footer from "@/components/Footer";
 import { ArrowForwardIos } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import useParticipantStore from "@/store/participantStore";
-import api from "@/api/api";
+// import api from "@/api/api";
+import axios from "axios";
 
 const Dashboard = () => {
   const { username, email } = useParticipantStore();
@@ -44,10 +45,13 @@ const Dashboard = () => {
     if (email && username) {
       const fetchProgress = async () => {
         try {
-          const { data } = await api.post("/progress/participant-summary", {
-            email: email,
-            name: username,
-          });
+          const { data } = await axios.post(
+            "https://progress-tracker.cranecloud.io/api/v1/progress/participant-summary",
+            {
+              email: email,
+              name: username,
+            }
+          );
 
           const summary = data.data;
 

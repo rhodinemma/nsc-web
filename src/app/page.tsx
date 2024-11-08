@@ -36,9 +36,9 @@ const Login = () => {
   const [schoolSection, setSchoolSection] = useState("");
   const [consentGiven, setConsentGiven] = useState(false);
 
-  // const handleOpen = () => {
-  //   setOpen(true);
-  // };
+  const handleOpen = () => {
+    setOpen(true);
+  };
 
   const handleClose = () => {
     setOpen(false);

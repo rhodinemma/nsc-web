@@ -203,6 +203,7 @@ const Login = () => {
       toast.success("Registration successful!");
 
       setOpen(false);
+      console.log("Registration successful:", response.data);
     } catch (error) {
       toast.error("Failed to register!");
       console.error("Error registering:", error);
@@ -210,6 +211,8 @@ const Login = () => {
       setRegistering(false);
     }
   };
+
+  console.log(isRegistrationSuccessful);
 
   return (
     <>

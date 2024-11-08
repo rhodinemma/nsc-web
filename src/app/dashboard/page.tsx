@@ -46,7 +46,7 @@ const Dashboard = () => {
       const fetchProgress = async () => {
         try {
           const { data } = await axios.post(
-            "https://progress-tracker.cranecloud.io/api/v1/progress/participant-summary",
+            "https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress/participant-summary",
             {
               email: email,
               name: username,

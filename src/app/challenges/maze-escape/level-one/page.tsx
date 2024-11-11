@@ -17,6 +17,8 @@ import Target from "@/components/Target";
 import Navbar from "@/components/Navbar";
 import { ArrowBack } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 import Marker from "@/components/Marker/Marker";
 
 type Position = {
@@ -118,6 +120,7 @@ function App() {
           return true
       }
 
+
       return false
   }
 
@@ -131,7 +134,9 @@ function App() {
     }
 
     if (!verifyFeasibleDirection(current_state)){
-        alert('Not feasible')
+
+      toast.error('That move is not possible')
+
     }else {
       setPosition((prevPos) => {
        
@@ -149,6 +154,10 @@ function App() {
         }
         return prevPos;
       });
+
+      if (current_state.current_direction === Direction.FORWARD && current_state.current_step === 0){
+        toast.success('Congratulations! You have successfully completed the challenge')
+      }
     }
 
     

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowBack } from "@mui/icons-material";
+import {toast} from 'sonner'
 
 type Position = {
   x: number;
@@ -143,7 +144,7 @@ function App() {
     }
 
     if (!verifyFeasibleDirection(current_state)){
-        alert('Not feasible')
+      toast.error('That move is not possible')
     }else {
       setPosition((prevPos) => {
        
@@ -161,6 +162,9 @@ function App() {
         }
         return prevPos;
       });
+      if (current_state.current_direction === Direction.LEFT && current_state.current_step === 6){
+        toast.success('Congratulations! You have successfully completed the challenge')
+      }
     }
 
     

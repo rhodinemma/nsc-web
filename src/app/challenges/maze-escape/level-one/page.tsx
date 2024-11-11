@@ -31,17 +31,30 @@ enum Direction {
   BACKWARD = 60,
 }
 
-function App({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+type CurrentPossibleMovement = {
+  possible_direction: number;
+}
 
+type CurrentMovementState = {
+  current_step: number;
+  current_direction: number;
+  possible_directions : CurrentPossibleMovement[];
+
+}
+
+function App() {
   const router = useRouter();
-
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [frame, setFrame] = useState<number>(Direction.FORWARD);
 
+  // const [comp_possible_directions , setpossible_directions] = useState([{possible_direction : Direction.FORWARD}])
   const [completed, setcompleted] = useState<boolean>(false);
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
+
+  // const {current_direction, possible_directions, setCurrentMovementState } = useCurrentMovementStore();
+
+
 
   const initializeBlockly = () => {
     Blockly.Blocks["move_forward"] = {
@@ -92,68 +105,104 @@ function App({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     initializeBlockly();
+
   }, []);
 
-  const moveForward = (frame: Direction) => {
-    setPosition((prevPos) => {
-      if (frame === Direction.FORWARD) {
-        return { x: prevPos.x + 19, y: prevPos.y };
-      } else if (frame === Direction.BACKWARD) {
-        return { x: prevPos.x - 15, y: prevPos.y };
-      } else if (frame === Direction.LEFT) {
-        return { x: prevPos.x, y: prevPos.y - 15 };
-      } else if (frame === Direction.RIGHT) {
-        return { x: prevPos.x, y: prevPos.y + 15 };
+  const verifyFeasibleDirection = (current_state : CurrentMovementState) : boolean => {
+      
+      if (current_state.current_step >= 1){
+        return false
       }
-      return prevPos;
-    });
-  };
+      
+      if (current_state.possible_directions.some(d => d.possible_direction === current_state.current_direction)) {
+          return true
+      }
 
-  const turnLeft = (current_direction: Direction): Direction => {
-    let newDirection: Direction;
+      return false
+  }
 
-    switch (current_direction) {
-      case Direction.FORWARD:
-        newDirection = Direction.LEFT;
-        break;
-      case Direction.LEFT:
-        newDirection = Direction.BACKWARD;
-        break;
-      case Direction.BACKWARD:
-        newDirection = Direction.RIGHT;
-        break;
-      case Direction.RIGHT:
-        newDirection = Direction.FORWARD;
-        break;
-      default:
-        newDirection = Direction.FORWARD;
+  const moveForward = (current_state: CurrentMovementState) : CurrentMovementState => {
+
+    let new_direction : CurrentMovementState = current_state
+
+    new_direction = {
+      ...current_state,
+      current_step : current_state.current_step + 1,
     }
 
-    setFrame(newDirection);
+    if (!verifyFeasibleDirection(current_state)){
+        alert('Not feasible')
+    }else {
+      setPosition((prevPos) => {
+       
+        if (current_state.current_direction === Direction.FORWARD) {
+  
+          return { x: prevPos.x + 19, y: prevPos.y };
+  
+        } else if (current_state.current_direction === Direction.BACKWARD) {
+          return { x: prevPos.x - 19, y: prevPos.y };
+        } else if (current_state.current_direction === Direction.LEFT) {
+          return { x: prevPos.x, y: prevPos.y - 19 };
+        } else if (current_state.current_direction === Direction.RIGHT) {
+          
+          return { x: prevPos.x, y: prevPos.y + 19 };
+        }
+        return prevPos;
+      });
+    }
+
+    
+    
+
+    return new_direction
+
+
+  };
+
+  const turnLeft = (current_state: CurrentMovementState): CurrentMovementState => {
+    let newDirection: CurrentMovementState;
+
+    switch (current_state.current_direction) {
+      case Direction.FORWARD:
+        newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : []};
+        break;
+      case Direction.LEFT:
+        newDirection = {current_direction : Direction.BACKWARD , current_step : current_state.current_step +1, possible_directions : []};
+        break;
+      case Direction.BACKWARD:
+        newDirection = {current_direction : Direction.RIGHT , current_step : current_state.current_step +1, possible_directions : []};
+        break;
+      case Direction.RIGHT:
+        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        break;
+      default:
+        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+    }
+
+    setFrame(newDirection.current_direction);
     return newDirection;
   };
 
-  const turnRight = (current_direction: Direction): Direction => {
-    let newDirection: Direction;
-
-    switch (current_direction) {
+  const turnRight = (current_state: CurrentMovementState): CurrentMovementState => {
+    let newDirection: CurrentMovementState;
+    switch (current_state.current_direction) {
       case Direction.FORWARD:
-        newDirection = Direction.RIGHT;
+        newDirection = {current_direction : Direction.RIGHT , current_step : current_state.current_step +1, possible_directions : []};
         break;
       case Direction.RIGHT:
-        newDirection = Direction.BACKWARD;
+        newDirection = {current_direction : Direction.BACKWARD , current_step : current_state.current_step +1, possible_directions : []};
         break;
       case Direction.BACKWARD:
-        newDirection = Direction.LEFT;
+        newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : []};
         break;
       case Direction.LEFT:
-        newDirection = Direction.FORWARD;
+        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
         break;
       default:
-        newDirection = Direction.FORWARD;
+        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
     }
 
-    setFrame(newDirection);
+    setFrame(newDirection.current_direction);
     return newDirection;
   };
 
@@ -164,8 +213,18 @@ function App({ params }: { params: { slug: string } }) {
       const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
       if (code) {
         const commands = code.split("\n").filter(Boolean);
-        let current_direction: Direction = Direction.FORWARD;
-        console.log(commands);
+
+        // let current_direction: Direction = Direction.FORWARD;
+
+        let currentMovementState : CurrentMovementState = {
+          current_direction : Direction.FORWARD,
+          current_step : 0,
+          possible_directions : [
+            {possible_direction : Direction.FORWARD}
+          ]
+        }
+
+
         let i = 0;
         const interval = setInterval(() => {
           if (i >= commands.length) {
@@ -176,15 +235,16 @@ function App({ params }: { params: { slug: string } }) {
             // eslint-disable-next-line no-eval
             // eval(commands[i]);
             if (commands[i].includes("moveForward")) {
-              moveForward(current_direction);
+              currentMovementState = moveForward(currentMovementState);
             }
 
             if (commands[i].includes("turnLeft")) {
-              current_direction = turnLeft(current_direction);
+              currentMovementState = turnLeft(currentMovementState);
+      
             }
 
             if (commands[i].includes("turnRight")) {
-              current_direction = turnRight(current_direction);
+              currentMovementState = turnRight(currentMovementState);
             }
           });
           i++;
@@ -301,10 +361,22 @@ function App({ params }: { params: { slug: string } }) {
                     [{ type: "path" }],
                     [{ type: "path" }],
                     [{ type: "path" }],
+                    [{ type: "path" }],
+
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+                    [{ type: "path" }],
+
                   ]}
                 />
 
-                <Target top={"45dvh"} right={"11.5dvw"} />
+                <Target top={"-13dvh"} right={"1.0dvw"} />
               </div>
             </Paper>
           </div>

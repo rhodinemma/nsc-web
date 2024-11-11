@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -7,15 +7,30 @@ import {
   Typography,
   Grid,
   LinearProgress,
-  Divider,
 } from "@mui/material";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowForwardIos } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import useParticipantStore from "@/store/participantStore";
+// import api from "@/api/api";
+import axios from "axios";
 
 const Dashboard = () => {
+  const { username, email } = useParticipantStore();
+
   const router = useRouter();
+
+  const [completedChallenges, setCompletedChallenges] = useState(0);
+  const [totalChallenges, setTotalChallenges] = useState(0);
+  const [challengeProgress, setChallengeProgress] = useState(0);
+  const [completedLevels, setCompletedLevels] = useState(0);
+  const [totalLevels, setTotalLevels] = useState(0);
+  const [levelProgress, setLevelProgress] = useState(0);
+  const [completedProjects, setCompletedProjects] = useState(0);
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [projectProgress, setProjectProgress] = useState(0);
+
   const cardStyle = {
     position: "relative",
     height: "100%",
@@ -26,32 +41,60 @@ const Dashboard = () => {
     overflow: "hidden",
   };
 
-  const completedChallenges = 15;
-  const totalChallenges = 20;
-  const completedLevels = 3;
-  const totalLevels = 5;
-  const completedProjects = 2;
-  const totalProjects = 5;
+  useEffect(() => {
+    if (email && username) {
+      const fetchProgress = async () => {
+        try {
+          const { data } = await axios.post(
+            "https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress/participant-summary",
+            {
+              email: email,
+              name: username,
+            }
+          );
 
-  // Calculate progress percentages
-  const challengeProgress = (completedChallenges / totalChallenges) * 100;
-  const levelProgress = (completedLevels / totalLevels) * 100;
-  const projectProgress = (completedProjects / totalProjects) * 100;
+          const summary = data.data;
 
-  const announcements = [
-    {
-      date: "November 1, 2024",
-      text: "Join our weekly coding challenge for a chance to win fun prizes!",
-    },
-    {
-      date: "October 30, 2024",
-      text: "Check out new Scratch tutorials added this week!",
-    },
-    {
-      date: "October 28, 2024",
-      text: "Don't forget to complete your coding exercises by Friday.",
-    },
-  ];
+          setCompletedChallenges(summary.challenges.completed);
+          setTotalChallenges(summary.challenges.total);
+          setChallengeProgress(
+            (summary.challenges.completed / summary.challenges.total) * 100
+          );
+
+          setCompletedLevels(summary.levels.completed);
+          setTotalLevels(summary.levels.total);
+          setLevelProgress(
+            (summary.levels.completed / summary.levels.total) * 100
+          );
+
+          setCompletedProjects(summary.projects.completed);
+          setTotalProjects(summary.projects.total);
+          setProjectProgress(
+            (summary.projects.completed / summary.projects.total) * 100
+          );
+        } catch (error) {
+          console.error("Error fetching progress:", error);
+        }
+      };
+
+      fetchProgress();
+    }
+  }, [email, username]);
+
+  // const announcements = [
+  //   {
+  //     date: "November 1, 2024",
+  //     text: "Join our weekly coding challenge for a chance to win fun prizes!",
+  //   },
+  //   {
+  //     date: "October 30, 2024",
+  //     text: "Check out new Scratch tutorials added this week!",
+  //   },
+  //   {
+  //     date: "October 28, 2024",
+  //     text: "Don't forget to complete your coding exercises by Friday.",
+  //   },
+  // ];
 
   // const leaderboardData = [
   //   { name: "Alice", score: 95 },
@@ -67,7 +110,7 @@ const Dashboard = () => {
 
       <Box sx={{ padding: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
-          Welcome, Rhodin !
+          Welcome, {username} !
         </Typography>
         <Grid container spacing={4}>
           {/* Left Section */}
@@ -252,8 +295,20 @@ const Dashboard = () => {
                 Announcements
               </Typography>
               <Box sx={{ position: "relative" }}>
-                {announcements.map((announcement, index) => (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    display: "flex",
+                    justifyContent: "center",
+                    py: 4,
+                  }}
+                >
+                  No announcements found
+                </Typography>
+                {/* {announcements.map((announcement, index) => (
                   <Box key={index} sx={{ mb: 3, position: "relative" }}>
+                    
                     <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
                       {announcement.date}
                     </Typography>
@@ -264,7 +319,7 @@ const Dashboard = () => {
                       <Divider sx={{ my: 2 }} />
                     )}
                   </Box>
-                ))}
+                ))} */}
               </Box>
             </Box>
             <Footer />

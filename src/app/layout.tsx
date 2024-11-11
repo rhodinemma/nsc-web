@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@mui/material";
 import { PrimaryTheme } from "@/Theme";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "NSC PLATFORM",
@@ -18,7 +19,10 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ margin: "0px" }}>
         <ThemeProvider theme={PrimaryTheme}>
-          <main>{children}</main>
+          <main>
+            <Toaster richColors position="top-right" />
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>

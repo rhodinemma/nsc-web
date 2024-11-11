@@ -114,7 +114,15 @@ function App() {
         return false
       }
 
-      if (current_state.current_direction == Direction.RIGHT && current_state.current_step == 3){
+      if (current_state.current_direction == Direction.RIGHT && current_state.current_step === 3){
+        return false
+      }
+
+      if (current_state.current_direction == Direction.FORWARD && current_state.current_step === 5){
+        return false
+      }
+
+      if (current_state.current_direction == Direction.LEFT && current_state.current_step === 7){
         return false
       }
       
@@ -141,7 +149,7 @@ function App() {
        
         if (current_state.current_direction === Direction.FORWARD) {
   
-          return { x: prevPos.x + 19, y: prevPos.y };
+          return { x: prevPos.x + 10.5, y: prevPos.y };
   
         } else if (current_state.current_direction === Direction.BACKWARD) {
           return { x: prevPos.x - 19, y: prevPos.y };
@@ -168,7 +176,13 @@ function App() {
 
     switch (current_state.current_direction) {
       case Direction.FORWARD:
-        newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : []};
+        if (current_state.current_step == 5){
+          newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : [
+            {possible_direction : Direction.LEFT}
+          ]};
+        }else {
+          newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : []};
+        }
         break;
       case Direction.LEFT:
         newDirection = {current_direction : Direction.BACKWARD , current_step : current_state.current_step +1, possible_directions : []};
@@ -177,7 +191,13 @@ function App() {
         newDirection = {current_direction : Direction.RIGHT , current_step : current_state.current_step +1, possible_directions : []};
         break;
       case Direction.RIGHT:
-        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        if (current_state.current_step === 3){
+          newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : [
+            {possible_direction : Direction.FORWARD}
+          ]};
+        }else{
+          newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        }
         break;
       default:
         newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};

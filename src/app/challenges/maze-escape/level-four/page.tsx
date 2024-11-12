@@ -9,7 +9,17 @@ import "./page.css";
 import Image from "next/image";
 import { javascriptGenerator } from "blockly/javascript";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { Paper, Button, Box, Typography } from "@mui/material";
+import {
+  Paper,
+  Button,
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Grid,
+  DialogActions,
+} from "@mui/material";
 import { flushSync } from "react-dom";
 import Marker from "@/components/Marker/Marker";
 import Maze from "@/components/Maze/Maze";
@@ -18,8 +28,10 @@ import Target from "@/components/Target";
 import gridFour from "@/components/MazeGrids/gridFour";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { ArrowBack } from "@mui/icons-material";
-import {toast} from 'sonner'
+import { ArrowBack, CheckCircle } from "@mui/icons-material";
+import { toast } from "sonner";
+import useParticipantStore from "@/store/participantStore";
+import axios from "axios";
 
 type Position = {
   x: number;
@@ -35,18 +47,20 @@ enum Direction {
 
 type CurrentPossibleMovement = {
   possible_direction: number;
-}
+};
 
 type CurrentMovementState = {
   current_step: number;
   current_direction: number;
-  possible_directions : CurrentPossibleMovement[];
-}
+  possible_directions: CurrentPossibleMovement[];
+};
 
 function App() {
   const router = useRouter();
+  const { email } = useParticipantStore();
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [frame, setFrame] = useState<number>(Direction.FORWARD);
+  const [openModal, setOpenModal] = useState(false);
 
   // const [comp_possible_directions , setpossible_directions] = useState([{possible_direction : Direction.FORWARD}])
   const [completed, setcompleted] = useState<boolean>(false);
@@ -55,7 +69,9 @@ function App() {
 
   // const {current_direction, possible_directions, setCurrentMovementState } = useCurrentMovementStore();
 
-
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
 
   const initializeBlockly = () => {
     Blockly.Blocks["move_forward"] = {
@@ -106,140 +122,200 @@ function App() {
 
   useEffect(() => {
     initializeBlockly();
-
   }, []);
 
-  const verifyFeasibleDirection = (current_state : CurrentMovementState) : boolean => {
-      
-      if (current_state.current_direction == Direction.FORWARD && current_state.current_step === 1){
-        return false
-      }
+  const verifyFeasibleDirection = (
+    current_state: CurrentMovementState
+  ): boolean => {
+    if (
+      current_state.current_direction == Direction.FORWARD &&
+      current_state.current_step === 1
+    ) {
+      return false;
+    }
 
-      if (current_state.current_direction == Direction.RIGHT && current_state.current_step === 3){
-        return false
-      }
+    if (
+      current_state.current_direction == Direction.RIGHT &&
+      current_state.current_step === 3
+    ) {
+      return false;
+    }
 
-      if (current_state.current_direction == Direction.FORWARD && current_state.current_step === 5){
-        return false
-      }
+    if (
+      current_state.current_direction == Direction.FORWARD &&
+      current_state.current_step === 5
+    ) {
+      return false;
+    }
 
-      if (current_state.current_direction == Direction.LEFT && current_state.current_step === 7){
-        return false
-      }
-      
-      if (current_state.possible_directions.some(d => d.possible_direction === current_state.current_direction)) {
-          return true
-      }
+    if (
+      current_state.current_direction == Direction.LEFT &&
+      current_state.current_step === 7
+    ) {
+      return false;
+    }
 
-      return false
-  }
+    if (
+      current_state.possible_directions.some(
+        (d) => d.possible_direction === current_state.current_direction
+      )
+    ) {
+      return true;
+    }
 
-  const moveForward = (current_state: CurrentMovementState) : CurrentMovementState => {
+    return false;
+  };
 
-    let new_direction : CurrentMovementState = current_state
+  const moveForward = (
+    current_state: CurrentMovementState
+  ): CurrentMovementState => {
+    let new_direction: CurrentMovementState = current_state;
 
     new_direction = {
       ...current_state,
-      current_step : current_state.current_step + 1,
-    }
+      current_step: current_state.current_step + 1,
+    };
 
-    if (!verifyFeasibleDirection(current_state)){
-      toast.error('That move is not possible')
-    }else {
+    if (!verifyFeasibleDirection(current_state)) {
+      toast.error("That move is not possible");
+    } else {
       setPosition((prevPos) => {
-       
         if (current_state.current_direction === Direction.FORWARD) {
-  
           return { x: prevPos.x + 10.5, y: prevPos.y };
-  
         } else if (current_state.current_direction === Direction.BACKWARD) {
           return { x: prevPos.x - 19, y: prevPos.y };
         } else if (current_state.current_direction === Direction.LEFT) {
           return { x: prevPos.x, y: prevPos.y - 19 };
         } else if (current_state.current_direction === Direction.RIGHT) {
-          
           return { x: prevPos.x, y: prevPos.y + 19 };
         }
         return prevPos;
       });
 
-      if (current_state.current_direction === Direction.LEFT && current_state.current_step === 6){
-        toast.success('Congratulations! You have successfully completed the challenge')
+      if (
+        current_state.current_direction === Direction.LEFT &&
+        current_state.current_step === 6
+      ) {
+        // toast.success(
+        //   "Congratulations! You have successfully completed the challenge"
+        // );
+        setOpenModal(true);
       }
     }
 
-    
-    
-
-    return new_direction
-
-
+    return new_direction;
   };
 
-  const turnLeft = (current_state: CurrentMovementState): CurrentMovementState => {
+  const turnLeft = (
+    current_state: CurrentMovementState
+  ): CurrentMovementState => {
     let newDirection: CurrentMovementState;
 
     switch (current_state.current_direction) {
       case Direction.FORWARD:
-        if (current_state.current_step == 5){
-          newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : [
-            {possible_direction : Direction.LEFT}
-          ]};
-        }else {
-          newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : []};
+        if (current_state.current_step == 5) {
+          newDirection = {
+            current_direction: Direction.LEFT,
+            current_step: current_state.current_step + 1,
+            possible_directions: [{ possible_direction: Direction.LEFT }],
+          };
+        } else {
+          newDirection = {
+            current_direction: Direction.LEFT,
+            current_step: current_state.current_step + 1,
+            possible_directions: [],
+          };
         }
         break;
       case Direction.LEFT:
-        newDirection = {current_direction : Direction.BACKWARD , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.BACKWARD,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
         break;
       case Direction.BACKWARD:
-        newDirection = {current_direction : Direction.RIGHT , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.RIGHT,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
         break;
       case Direction.RIGHT:
-        if (current_state.current_step === 3){
-          newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : [
-            {possible_direction : Direction.FORWARD}
-          ]};
-        }else{
-          newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        if (current_state.current_step === 3) {
+          newDirection = {
+            current_direction: Direction.FORWARD,
+            current_step: current_state.current_step + 1,
+            possible_directions: [{ possible_direction: Direction.FORWARD }],
+          };
+        } else {
+          newDirection = {
+            current_direction: Direction.FORWARD,
+            current_step: current_state.current_step + 1,
+            possible_directions: [],
+          };
         }
         break;
       default:
-        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.FORWARD,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
     }
 
     setFrame(newDirection.current_direction);
     return newDirection;
   };
 
-  const turnRight = (current_state: CurrentMovementState): CurrentMovementState => {
+  const turnRight = (
+    current_state: CurrentMovementState
+  ): CurrentMovementState => {
     let newDirection: CurrentMovementState;
     switch (current_state.current_direction) {
       case Direction.FORWARD:
-        if (current_state.current_step == 1){
-          
-          newDirection = {current_direction : Direction.RIGHT , current_step : current_state.current_step +1, possible_directions : [
-            {possible_direction : Direction.RIGHT}
-          ]};
-
-
-        }else {
-          newDirection = {current_direction : Direction.RIGHT , current_step : current_state.current_step +1, possible_directions : []};
-
+        if (current_state.current_step == 1) {
+          newDirection = {
+            current_direction: Direction.RIGHT,
+            current_step: current_state.current_step + 1,
+            possible_directions: [{ possible_direction: Direction.RIGHT }],
+          };
+        } else {
+          newDirection = {
+            current_direction: Direction.RIGHT,
+            current_step: current_state.current_step + 1,
+            possible_directions: [],
+          };
         }
 
         break;
       case Direction.RIGHT:
-        newDirection = {current_direction : Direction.BACKWARD , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.BACKWARD,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
         break;
       case Direction.BACKWARD:
-        newDirection = {current_direction : Direction.LEFT , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.LEFT,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
         break;
       case Direction.LEFT:
-        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.FORWARD,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
         break;
       default:
-        newDirection = {current_direction : Direction.FORWARD , current_step : current_state.current_step +1, possible_directions : []};
+        newDirection = {
+          current_direction: Direction.FORWARD,
+          current_step: current_state.current_step + 1,
+          possible_directions: [],
+        };
     }
 
     setFrame(newDirection.current_direction);
@@ -256,14 +332,11 @@ function App() {
 
         // let current_direction: Direction = Direction.FORWARD;
 
-        let currentMovementState : CurrentMovementState = {
-          current_direction : Direction.FORWARD,
-          current_step : 0,
-          possible_directions : [
-            {possible_direction : Direction.FORWARD}
-          ]
-        }
-
+        let currentMovementState: CurrentMovementState = {
+          current_direction: Direction.FORWARD,
+          current_step: 0,
+          possible_directions: [{ possible_direction: Direction.FORWARD }],
+        };
 
         let i = 0;
         const interval = setInterval(() => {
@@ -280,7 +353,6 @@ function App() {
 
             if (commands[i].includes("turnLeft")) {
               currentMovementState = turnLeft(currentMovementState);
-      
             }
 
             if (commands[i].includes("turnRight")) {
@@ -297,6 +369,28 @@ function App() {
     setPosition({ x: 0, y: 0 });
     setcompleted(false);
     setFrame(Direction.FORWARD);
+  };
+
+  const handleFinishClick = async () => {
+    try {
+      const response = await axios.post(
+        `https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress`,
+        {
+          participant: email,
+          challengeId: "672d1513bc573ddbaf73b560",
+          levelId: "672dd11eeaef355fc63911e7",
+          score: 10,
+          completed: true,
+        }
+      );
+      console.log("Progress updated:", response.data);
+      toast.success("Level score submitted successfully!");
+    } catch (error) {
+      console.error("Error updating progress:", error);
+      toast.error("Failed to update score!");
+    }
+
+    router.push("/challenges");
   };
 
   return (
@@ -401,6 +495,36 @@ function App() {
           </div>
         </div>
       </Box>
+
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Congratulations!</DialogTitle>
+        <DialogContent>
+          <Grid
+            container
+            justifyContent="center"
+            alignItems="center"
+            direction="column"
+          >
+            <CheckCircle style={{ fontSize: 100, color: "green" }} />
+            <Typography variant="h6" align="center" style={{ marginTop: 10 }}>
+              You have completed all levels for this challenge
+            </Typography>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          {/* <Button onClick={handleCloseModal} color="primary">
+            Cancel
+          </Button> */}
+          <Button onClick={handleFinishClick} color="primary">
+            Finish
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

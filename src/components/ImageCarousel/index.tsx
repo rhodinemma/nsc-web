@@ -1,13 +1,14 @@
 import Slider from "react-slick";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 
 interface CarouselProps {
   images: { src: string; alt: string }[];
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const CustomPrevArrow = (props: any) => {
-  const { className, onClick } = props;
+  const { onClick } = props;
   return (
     <IconButton
       onClick={onClick}
@@ -25,8 +26,9 @@ const CustomPrevArrow = (props: any) => {
   );
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const CustomNextArrow = (props: any) => {
-  const { className, onClick } = props;
+  const { onClick } = props;
   return (
     <IconButton
       onClick={onClick}

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import "./globals.css";
 import { ThemeProvider } from "@mui/material";
 import { PrimaryTheme } from "@/Theme";

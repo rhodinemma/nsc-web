@@ -15,6 +15,13 @@ import { useRouter } from "next/navigation";
 import useParticipantStore from "@/store/participantStore";
 // import api from "@/api/api";
 import axios from "axios";
+import ImageCarousel from "@/components/ImageCarousel";
+
+const images = [
+  { src: "/1.jpeg", alt: "Poster 1" },
+  { src: "/2.jpeg", alt: "Poster 2" },
+  { src: "/3.jpeg", alt: "Poster 3" },
+];
 
 const Dashboard = () => {
   const { username, email } = useParticipantStore();
@@ -252,6 +259,8 @@ const Dashboard = () => {
               </Grid>
             </Box>
 
+            {/* <ImageCarousel images={images} /> */}
+
             {/* <Box sx={{ mt: 4, mb: 4 }}>
               <Box
                 sx={{
@@ -295,7 +304,8 @@ const Dashboard = () => {
                 Announcements
               </Typography>
               <Box sx={{ position: "relative" }}>
-                <Typography
+                <ImageCarousel images={images} />
+                {/* <Typography
                   variant="body2"
                   sx={{
                     mt: 1,
@@ -305,7 +315,7 @@ const Dashboard = () => {
                   }}
                 >
                   No announcements found
-                </Typography>
+                </Typography> */}
                 {/* {announcements.map((announcement, index) => (
                   <Box key={index} sx={{ mb: 3, position: "relative" }}>
                     

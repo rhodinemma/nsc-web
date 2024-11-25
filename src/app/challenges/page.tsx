@@ -112,7 +112,7 @@ const Challenges = () => {
       id: 2,
       name: "Treasure Hunt",
       description: "",
-      isAuthorizedtoTake: false,
+      isAuthorizedtoTake: true,
       challenges: [
         {
           id: 1,

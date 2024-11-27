@@ -20,6 +20,7 @@ const Bird: React.FC<BirdProps> = ({ frame, position }) => {
             position: 'relative',
             left : '-7dvw',
             top : '20dvh',
+            zIndex: 1,
         }}>
             <img
             src="/challengeicons/bird.png"

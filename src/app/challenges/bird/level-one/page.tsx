@@ -66,6 +66,10 @@ function App() {
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [frame, setFrame] = useState<number>(Direction.LEFT);
   const [openModal, setOpenModal] = useState(false);
+  const [angle, setPropAngle] = useState<number>(0);
+
+  const [wormVisible , setwormVisible] = useState<boolean>(true);
+  const [nestVisible , setnestVisible] = useState<boolean>(true);
 
   const [completed, setcompleted] = useState<boolean>(false);
 
@@ -90,8 +94,9 @@ function App() {
         }
     };
     
-    javascriptGenerator.forBlock["set_angle"] = function () {
-      return "setAngle();\n";
+    javascriptGenerator.forBlock["set_angle"] = function (block) {
+
+      return `setAngle(${block.getFieldValue('ANGLE')});\n`;
     };
   };
 
@@ -99,11 +104,22 @@ function App() {
     initializeBlockly();
   }, []);
 
-  const setAngle = (currentState: CurrentMovementState) => {
+  const setMovement = (position : Position , angle : number) => {
+
+    setPosition({ x: position.x * Math.cos(angle), y: position.y * Math.sin(-angle) });
+
+  }
+
+  const setAngle = (currentState: CurrentMovementState) : CurrentMovementState => {
 
     setFrame(Direction.Angle45);
 
-    setPosition({ x: 50 * Math.cos(45), y: 50 * Math.sin(-45) });
+
+    currentState.current_direction = Direction.Angle45;
+    currentState.current_step += 1;
+
+
+    return currentState;
 
   }
   
@@ -131,7 +147,23 @@ function App() {
             
 
             if (commands[i].includes("setAngle")) {
-              setAngle(currentMovementState);
+
+              if (commands[i] != 'setAngle(45);') {
+                toast.error(`Incorrect angle set. Please set angle to 45 degrees`);
+                return
+              }
+              currentMovementState = setAngle(currentMovementState);
+              setMovement({x:40,y:40}, 45);
+
+              setTimeout(() => {
+                  setwormVisible(false);
+              } , 600)
+
+              setTimeout(() => {
+                  setnestVisible(false);
+                  setOpenModal(true);
+              } , 650)
+
             }
 
           });
@@ -143,6 +175,8 @@ function App() {
 
   const resetProgram = () => {
     setPosition({ x: 0, y: 0 });
+    setnestVisible(true)
+    setwormVisible(true)
     setcompleted(false);
     setFrame(Direction.LEFT);
   };
@@ -166,7 +200,7 @@ function App() {
       toast.error("Failed to update score!");
     }
 
-    router.push("/challenges/maze-escape/level-three");
+    router.push("/challenges/bird/level-two");
   };
 
   return (
@@ -260,29 +294,34 @@ function App() {
 
             <Paper className="mazeoneRun">
                 <Bird frame={frame} position={position} />
-                <img
-                  src="/challengeicons/worm.png"
-                  width={87}
-                  height={108}
-                  style={{
-                      position : 'relative',
-                      right : '10dvw',
-                  }}
-                  alt="Marker"
-                  />
+                {
+                    wormVisible && <img
+                    src="/challengeicons/worm.png"
+                    width={87}
+                    height={108}
+                    style={{
+                        position : 'relative',
+                        right : '10dvw',
+                    }}
+                    alt="Marker"
+                    />
+                }
 
-                  <img
-                      src="/challengeicons/nest.png"
-                      width={87}
-                      height={108}
-                      style={{
-                          position : 'relative',
-                          bottom : '10dvh',
-                          right : '10dvw',
-          
-                      }}
-                      alt="Marker"
-                  />
+                {
+                    nestVisible && <img
+                    src="/challengeicons/nest.png"
+                    width={87}
+                    height={108}
+                    style={{
+                        position : 'relative',
+                        bottom : '10dvh',
+                        right : '10dvw',
+        
+                    }}
+                    alt="Marker"
+                    />
+                }
+                
             </Paper>
           </div>
         </div>

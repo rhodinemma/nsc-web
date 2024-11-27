@@ -296,7 +296,7 @@ const Challenges = () => {
         justifyContent="center"
       >
         <Typography
-          variant="h5"
+          variant="h4"
           className="title"
           color="secondary"
           sx={{ margin: "2rem 0 2rem 0" }}

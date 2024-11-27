@@ -27,5 +27,15 @@ export const PrimaryTheme = createTheme({
     fontFamily: 'Teachers, sans-serif',
     fontSize: 16,
   },
-
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none', // Removes default capitalization
+        },
+      },
+    },
+  },
 });
+
+

@@ -23,6 +23,21 @@ const images = [
   { src: "/3.jpeg", alt: "Poster 3" },
 ];
 
+interface ChallengeDetail {
+  challengeId: string;
+  name: string;
+  totalLevels: number;
+  levelsCompleted: number;
+  completed: boolean;
+}
+
+interface ProgressSummary {
+  participant: string;
+  completedLevels: number;
+  completedChallenges: number;
+  challengeDetails: ChallengeDetail[];
+}
+
 const Dashboard = () => {
   const { username, email } = useParticipantStore();
 
@@ -34,9 +49,9 @@ const Dashboard = () => {
   const [completedLevels, setCompletedLevels] = useState(0);
   const [totalLevels, setTotalLevels] = useState(0);
   const [levelProgress, setLevelProgress] = useState(0);
-  const [completedProjects, setCompletedProjects] = useState(0);
-  const [totalProjects, setTotalProjects] = useState(0);
-  const [projectProgress, setProjectProgress] = useState(0);
+  // const [completedProjects, setCompletedProjects] = useState(0);
+  // const [totalProjects, setTotalProjects] = useState(0);
+  // const [projectProgress, setProjectProgress] = useState(0);
 
   const cardStyle = {
     position: "relative",
@@ -49,35 +64,38 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (email && username) {
+    if (email) {
       const fetchProgress = async () => {
         try {
-          const { data } = await axios.post(
-            "https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress/participant-summary",
-            {
-              email: email,
-              name: username,
-            }
+          const { data } = await axios.get<ProgressSummary>(
+            `https://pt-updated-c6ed560c-f7ed-437c-b7bb.cranecloud.io/api/v1/progress/dashboard-summary/participant?email=${email}`
           );
 
-          const summary = data.data;
+          const summary = data;
 
-          setCompletedChallenges(summary.challenges.completed);
-          setTotalChallenges(summary.challenges.total);
-          setChallengeProgress(
-            (summary.challenges.completed / summary.challenges.total) * 100
+          // Levels
+          const completedLevels = summary.completedLevels || 0;
+          const totalLevels = summary.challengeDetails.reduce(
+            (total, challenge) => total + challenge.totalLevels,
+            0
           );
 
-          setCompletedLevels(summary.levels.completed);
-          setTotalLevels(summary.levels.total);
+          setCompletedLevels(completedLevels);
+          setTotalLevels(totalLevels);
           setLevelProgress(
-            (summary.levels.completed / summary.levels.total) * 100
+            totalLevels > 0 ? (completedLevels / totalLevels) * 100 : 0
           );
 
-          setCompletedProjects(summary.projects.completed);
-          setTotalProjects(summary.projects.total);
-          setProjectProgress(
-            (summary.projects.completed / summary.projects.total) * 100
+          // Challenges
+          const completedChallenges = summary.completedChallenges || 0;
+          const totalChallenges = summary.challengeDetails.length;
+
+          setCompletedChallenges(completedChallenges);
+          setTotalChallenges(totalChallenges);
+          setChallengeProgress(
+            totalChallenges > 0
+              ? (completedChallenges / totalChallenges) * 100
+              : 0
           );
         } catch (error) {
           console.error("Error fetching progress:", error);
@@ -86,30 +104,7 @@ const Dashboard = () => {
 
       fetchProgress();
     }
-  }, [email, username]);
-
-  // const announcements = [
-  //   {
-  //     date: "November 1, 2024",
-  //     text: "Join our weekly coding challenge for a chance to win fun prizes!",
-  //   },
-  //   {
-  //     date: "October 30, 2024",
-  //     text: "Check out new Scratch tutorials added this week!",
-  //   },
-  //   {
-  //     date: "October 28, 2024",
-  //     text: "Don't forget to complete your coding exercises by Friday.",
-  //   },
-  // ];
-
-  // const leaderboardData = [
-  //   { name: "Alice", score: 95 },
-  //   { name: "Bob", score: 90 },
-  //   { name: "Charlie", score: 85 },
-  //   { name: "Diana", score: 80 },
-  //   { name: "Ethan", score: 75 },
-  // ];
+  }, [email]);
 
   return (
     <>
@@ -158,12 +153,10 @@ const Dashboard = () => {
               </Box>
 
               <Box>
-                <Typography variant="body1">
-                  Projects Built: {completedProjects} / {totalProjects}
-                </Typography>
+                <Typography variant="body1">Projects Built: 0 / 0</Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={projectProgress}
+                  value={0}
                   sx={{ height: 20 }}
                 />
               </Box>
@@ -238,7 +231,7 @@ const Dashboard = () => {
                         display="flex"
                         alignItems="center"
                         mb={1}
-                        onClick={() => router.push("/build-project")}
+                        onClick={() => router.push("/projects")}
                         sx={{ cursor: "pointer" }}
                       >
                         <Typography variant="h6" gutterBottom>

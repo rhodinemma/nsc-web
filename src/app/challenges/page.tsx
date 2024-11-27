@@ -110,23 +110,23 @@ const Challenges = () => {
     },
     {
       id: 2,
-      name: "Treasure Hunt",
+      name: "The bird",
       description: "",
-      isAuthorizedtoTake: false,
+      isAuthorizedtoTake: true,
       challenges: [
         {
           id: 1,
           name: "Level 1",
           description: "Level 1",
           isCompleted: false,
-          path: "/treasure-hunt/1",
+          path: "/bird/level-one",
         },
         {
           id: 2,
           name: "Level 2",
           description: "Level 2",
           isCompleted: false,
-          path: "/treasure-hunt/2",
+          path: "/bird/level-two",
         },
         {
           id: 3,

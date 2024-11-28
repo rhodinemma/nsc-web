@@ -128,13 +128,13 @@ const Challenges = () => {
           isCompleted: false,
           path: "/bird/level-two",
         },
-        {
-          id: 3,
-          name: "Level 3",
-          description: "Level 3",
-          isCompleted: false,
-          path: "/treasure-hunt/3",
-        },
+        // {
+        //   id: 3,
+        //   name: "Level 3",
+        //   description: "Level 3",
+        //   isCompleted: false,
+        //   path: "/treasure-hunt/3",
+        // },
       ],
     },
     {

@@ -34,8 +34,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
 import useParticipantStore from "@/store/participantStore";
-import {registerFieldAngle, FieldAngle} from '@blockly/field-angle';
-
+import { registerFieldAngle, FieldAngle } from "@blockly/field-angle";
 
 type Position = {
   x: number;
@@ -43,7 +42,6 @@ type Position = {
 };
 
 enum Direction {
-
   Angle45 = 9,
   LEFT = 99,
   RIGHT = 40,
@@ -69,8 +67,8 @@ function App() {
   const [openModal, setOpenModal] = useState(false);
   const [angle, setPropAngle] = useState<number>(0);
 
-  const [wormVisible , setwormVisible] = useState<boolean>(true);
-  const [nestVisible , setnestVisible] = useState<boolean>(true);
+  const [wormVisible, setwormVisible] = useState<boolean>(true);
+  const [nestVisible, setnestVisible] = useState<boolean>(true);
 
   const [completed, setcompleted] = useState<boolean>(false);
 
@@ -81,63 +79,60 @@ function App() {
   };
 
   const initializeBlockly = () => {
-    registerFieldAngle()
-    Blockly.Blocks['set_angle'] = {
-        init: function () {
-            this.appendDummyInput()
-            .appendField("heading")
-            .appendField(new FieldAngle(90), "ANGLE");
-            this.setPreviousStatement(true, null);
-            this.setNextStatement(true, null);
-            this.setColour(230);
-            this.setTooltip("Sets an angle for movement.");
-            this.setHelpUrl("");
-        }
+    registerFieldAngle();
+    Blockly.Blocks["set_angle"] = {
+      init: function () {
+        this.appendDummyInput()
+          .appendField("heading")
+          .appendField(new FieldAngle(90), "ANGLE");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(230);
+        this.setTooltip("Sets an angle for movement.");
+        this.setHelpUrl("");
+      },
     };
 
-    Blockly.Blocks['if_else'] = {
-        init: function () {
-          this.appendValueInput("CONDITION")
-              .setCheck("Boolean")
-              .appendField("if");
-          this.appendStatementInput("DO")
-              .appendField("do");
-          this.appendStatementInput("ELSE")
-              .appendField("else");
-          this.setColour(210);
-          this.setTooltip("Conditional block with if-else logic");
-          this.setHelpUrl("");
-        }
+    Blockly.Blocks["if_else"] = {
+      init: function () {
+        this.appendValueInput("CONDITION")
+          .setCheck("Boolean")
+          .appendField("if");
+        this.appendStatementInput("DO").appendField("do");
+        this.appendStatementInput("ELSE").appendField("else");
+        this.setColour(210);
+        this.setTooltip("Conditional block with if-else logic");
+        this.setHelpUrl("");
+      },
     };
 
-    Blockly.Blocks['check_worm'] = {
-        init: function () {
-          this.appendDummyInput()
-              .appendField("does not have worm");
-          this.setOutput(true, "Boolean");
-          this.setColour(120);
-          this.setTooltip("Check if worm is present or not.");
-          this.setHelpUrl("");
-        }
+    Blockly.Blocks["check_worm"] = {
+      init: function () {
+        this.appendDummyInput().appendField("does not have worm");
+        this.setOutput(true, "Boolean");
+        this.setColour(120);
+        this.setTooltip("Check if worm is present or not.");
+        this.setHelpUrl("");
+      },
     };
 
-    javascriptGenerator.forBlock['if_else'] = function (block) {
-        const condition = javascriptGenerator.valueToCode(block, 'CONDITION', Order.NONE ) || 'false';
-        // const condition = block.getFieldValue('CONDITION');
-        const doBranch = javascriptGenerator.statementToCode(block, 'DO') || '';
-        const elseBranch = javascriptGenerator.statementToCode(block, 'ELSE') || '';
-        return `if (${condition}) {\n${doBranch}} else {\n${elseBranch}}\n`;
+    javascriptGenerator.forBlock["if_else"] = function (block) {
+      const condition =
+        javascriptGenerator.valueToCode(block, "CONDITION", Order.NONE) ||
+        "false";
+      // const condition = block.getFieldValue('CONDITION');
+      const doBranch = javascriptGenerator.statementToCode(block, "DO") || "";
+      const elseBranch =
+        javascriptGenerator.statementToCode(block, "ELSE") || "";
+      return `if (${condition}) {\n${doBranch}} else {\n${elseBranch}}\n`;
     };
-    
+
     javascriptGenerator.forBlock["check_worm"] = function (block) {
-
-        return ["!hasWorm()", Order.LOGICAL_NOT];
-
+      return ["!hasWorm()", Order.LOGICAL_NOT];
     };
-    
-    javascriptGenerator.forBlock["set_angle"] = function (block) {
 
-      return `setAngle(${block.getFieldValue('ANGLE')});\n`;
+    javascriptGenerator.forBlock["set_angle"] = function (block) {
+      return `setAngle(${block.getFieldValue("ANGLE")});\n`;
     };
   };
 
@@ -145,54 +140,51 @@ function App() {
     initializeBlockly();
   }, []);
 
-  const setMovement = (position : Position , angle : number) => {
+  const setMovement = (position: Position, angle: number) => {
+    setPosition({
+      x: position.x * Math.cos(angle),
+      y: position.y * Math.sin(-angle),
+    });
+  };
 
-    setPosition({ x: position.x * Math.cos(angle), y: position.y * Math.sin(-angle) });
-
-  }
-
-  const setAngle = ()  => {
-
-    //Turn the direction of the bird 
-
+  const setAngle = () => {
+    //Turn the direction of the bird
     //Move the bird in the direction of the angle
-
-  }
+  };
 
   const hasWorm = () => {
-
     //Check if the bird has a worm
     return true;
-  }
+  };
 
-const moveBird = () => {
+  const moveBird = () => {
     setFrame(Direction.FORWARD);
     setPosition({ x: 16, y: 0 });
     setTimeout(() => {
-        flushSync(() => setwormVisible(false));
-        setFrame(Direction.LEFT);
+      flushSync(() => setwormVisible(false));
+      setFrame(Direction.LEFT);
     }, 1000);
     setTimeout(() => {
-        setPosition({ x: 16, y: -42 });
+      setPosition({ x: 16, y: -42 });
     }, 2000);
-};
-  
+  };
+
   const runCode = () => {
     if (workspaceRef.current) {
       setcompleted(true);
       javascriptGenerator.addReservedWords("code");
       const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
       if (code) {
-            const success_code = `if (!hasWorm()) {\n  setAngle(0);\n} else {\n  setAngle(90);\n}\n`
+        const success_code = `if (!hasWorm()) {\n  setAngle(0);\n} else {\n  setAngle(90);\n}\n`;
 
-            if (success_code === code){
-                moveBird();
-                setTimeout(() => {
-                    setOpenModal(true);
-                }, 3000);
-            }else {
-                toast.error("Your code is incorrect. Please try again.");
-            }
+        if (success_code === code) {
+          moveBird();
+          setTimeout(() => {
+            setOpenModal(true);
+          }, 3000);
+        } else {
+          toast.error("Your code is incorrect. Please try again.");
+        }
       }
     }
   };
@@ -202,7 +194,6 @@ const moveBird = () => {
     setFrame(Direction.FORWARD);
     setwormVisible(true);
     setcompleted(false);
-
   };
 
   const handleNextClick = async () => {
@@ -211,10 +202,10 @@ const moveBird = () => {
         `https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress`,
         {
           participant: email,
-          challengeId: "672d1513bc573ddbaf73b560",
-          levelId: "672d177624ce330bc1ba79d3",
+          challengeId: "6748eb650a2fba264a22e700",
+          levelId: "6748ed3f0a2fba264a22e704",
           score: 10,
-          completed: true
+          completed: true,
         }
       );
       console.log("Progress updated:", response.data);
@@ -296,26 +287,24 @@ const moveBird = () => {
             <Paper className="blockly-container">
               <BlocklyWorkspace
                 toolboxConfiguration={{
-                    kind: "categoryToolbox",
-                    contents: [
-                      {
-                        kind: "category",
-                        name: "Logic",
-                        colour: "210",
-                        contents: [
-                          { kind: "block", type: "if_else" },
-                          { kind: "block", type: "check_worm" }
-                        ],
-                      },
-                      {
-                        kind: "category",
-                        name: "Actions",
-                        colour: "230",
-                        contents: [
-                          { kind: "block", type: "set_angle" },
-                        ],
-                      },
-                    ],
+                  kind: "categoryToolbox",
+                  contents: [
+                    {
+                      kind: "category",
+                      name: "Logic",
+                      colour: "210",
+                      contents: [
+                        { kind: "block", type: "if_else" },
+                        { kind: "block", type: "check_worm" },
+                      ],
+                    },
+                    {
+                      kind: "category",
+                      name: "Actions",
+                      colour: "230",
+                      contents: [{ kind: "block", type: "set_angle" }],
+                    },
+                  ],
                 }}
                 workspaceConfiguration={{}}
                 className="fill-height"
@@ -325,38 +314,37 @@ const moveBird = () => {
               />
             </Paper>
 
-            <Paper className="mazeoneRun" >
-                        <Bird frame={frame} position={position} />
+            <Paper className="mazeoneRun">
+              <Bird frame={frame} position={position} />
 
-                        {wormVisible && (
-                            <img
-                                src="/challengeicons/worm.png"
-                                width={87}
-                                height={108}
-                                style={{
-                                    position: 'absolute',
-                                    bottom: '10%', // Adjust percentage as needed
-                                    right: '7%', // Adjust percentage as needed
-                                }}
-                                alt="Marker"
-                            />
-                        )}
+              {wormVisible && (
+                <img
+                  src="/challengeicons/worm.png"
+                  width={87}
+                  height={108}
+                  style={{
+                    position: "absolute",
+                    bottom: "10%", // Adjust percentage as needed
+                    right: "7%", // Adjust percentage as needed
+                  }}
+                  alt="Marker"
+                />
+              )}
 
-                        {nestVisible && (
-                            <img
-                                src="/challengeicons/nest.png"
-                                width={87}
-                                height={108}
-                                style={{
-                                    position: 'absolute',
-                                    top: '20%', // Adjust percentage as needed
-                                    right: '7%', // Adjust percentage as needed
-                                }}
-                                alt="Marker"
-                            />
-                        )}
+              {nestVisible && (
+                <img
+                  src="/challengeicons/nest.png"
+                  width={87}
+                  height={108}
+                  style={{
+                    position: "absolute",
+                    top: "20%", // Adjust percentage as needed
+                    right: "7%", // Adjust percentage as needed
+                  }}
+                  alt="Marker"
+                />
+              )}
             </Paper>
-
           </div>
         </div>
 

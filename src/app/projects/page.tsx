@@ -1,18 +1,19 @@
 "use client";
 import Navbar from "@/components/Navbar";
-import { SaveAs, Upload } from "@mui/icons-material";
+import useParticipantStore from "@/store/participantStore";
+import { HourglassDisabled, Upload } from "@mui/icons-material";
 import {
   Autocomplete,
   Avatar,
   Box,
   Button,
   Card,
-  Chip,
   CircularProgress,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   FormControl,
   Grid,
@@ -30,7 +31,8 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Participant {
   id: number;
@@ -46,49 +48,22 @@ interface FormData {
   file: string | null;
 }
 
+const availableParticipants: Participant[] = [
+  { id: 1, name: "Alice Johnson" },
+  { id: 2, name: "Bob Smith" },
+  { id: 3, name: "Charlie Davis" },
+];
+
 const BuildProjectPage = () => {
   const router = useRouter();
 
-  const projects = [
-    {
-      icon: "/puzzle.svg",
-      title: "Project 1",
-      subTheme: "Animation",
-      description: "A simple Scratch animation project.",
-    },
-    {
-      icon: "/puzzle.svg",
-      title: "Project 2",
-      subTheme: "Game Development",
-      description: "An interactive game made with Scratch.",
-    },
-    {
-      icon: "/puzzle.svg",
-      title: "Project 3",
-      subTheme: "Storytelling",
-      description: "A creative storytelling project using Scratch.",
-    },
-    {
-      icon: "/puzzle.svg",
-      title: "Project 4",
-      subTheme: "Art",
-      description: "An artistic project showcasing creative designs.",
-    },
-    {
-      icon: "/puzzle.svg",
-      title: "Project 5",
-      subTheme: "Music",
-      description: "A Scratch project with custom soundtracks.",
-    },
-    {
-      icon: "/puzzle.svg",
-      title: "Project 6",
-      subTheme: "Science",
-      description: "An educational project explaining scientific concepts.",
-    },
-  ];
+  const { email } = useParticipantStore();
 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [projects, setProjects] = useState<FormData[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [confirmationDialog, setConfirmationDialog] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -102,11 +77,28 @@ const BuildProjectPage = () => {
   const [uploading, setUploading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
 
-  const availableParticipants: Participant[] = [
-    { id: 1, name: "Alice Johnson" },
-    { id: 2, name: "Bob Smith" },
-    { id: 3, name: "Charlie Davis" },
-  ];
+  useEffect(() => {
+    setLoading(true);
+    const fetchParticipantProject = async () => {
+      try {
+        const response = await axios.post(
+          `https://progressbot-vzd5.onrender.com/api/v1/project/participant`,
+          {
+            email: email,
+          }
+        );
+
+        setProjects(response.data.data);
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+      } catch (error) {
+        console.error("Failed to get projects for participant:", error);
+      }
+    };
+
+    fetchParticipantProject();
+  }, [email]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormChange = (field: keyof FormData, value: any) => {
@@ -124,19 +116,19 @@ const BuildProjectPage = () => {
     setUploading(true);
 
     try {
-      // Use FormData to send the file
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await axios.post(
+        "https://progressbot-vzd5.onrender.com/api/v1/uploads",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-      // Assuming the response contains the file ID
-      const fileId = response.data.fileId;
+      const fileId = response.data.data.id;
       handleFormChange("file", fileId);
-
-      console.log("File uploaded successfully. File ID:", fileId);
     } catch (error) {
       setFileError("Failed to upload file. Please try again.");
       console.error("File upload error:", error);
@@ -148,21 +140,65 @@ const BuildProjectPage = () => {
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
 
+  const handleOpenDeleteDialog = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setSelectedProjectId("");
+  };
+
   const handleSubmit = () => {
     // ensure file is uploaded
-    // if (!formData.file) {
-    //   setFileError("Please upload a file before submitting.");
-    //   return;
-    // }
+    if (!formData.file) {
+      setFileError("Please upload a file before submitting.");
+      return;
+    }
 
-    console.log("Form Data Submitted:", formData);
     setOpenDialog(false);
     setConfirmationDialog(true);
   };
 
-  const handleConfirmation = (action: string) => {
-    console.log(`Project ${action}:`, formData);
+  const handleConfirmation = async () => {
     setConfirmationDialog(false);
+
+    try {
+      const response = await axios.post(
+        `https://progressbot-vzd5.onrender.com/api/v1/project`,
+        {
+          title: formData.title,
+          subTheme: formData.subTheme,
+          participantType: formData.participantType,
+          participant: email,
+          participants: formData.participants,
+          description: formData.description,
+          file: formData.file,
+        }
+      );
+
+      console.log("Project submitted successfully:", response.data);
+      toast.success("Project submitted successfully!");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error submitting project:", error);
+      toast.error("Error submitting project!");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await axios.delete(
+        `https://progressbot-vzd5.onrender.com/api/v1/project/${selectedProjectId}`
+      );
+
+      console.log("Project deleted successfully:", response.data);
+      toast.success("Project deleted successfully!");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error submitting project:", error);
+    }
   };
 
   return (
@@ -217,99 +253,130 @@ const BuildProjectPage = () => {
 
           {/* Content Section */}
           <Grid container spacing={3}>
-            {projects.map((project, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card
+            {loading ? (
+              <Container disableGutters>
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  height="50vh"
+                >
+                  <CircularProgress />
+                </Box>
+              </Container>
+            ) : !loading ? (
+              projects?.map((project, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card
+                    sx={{
+                      position: "relative",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      padding: 2,
+                      textAlign: "center",
+                      height: "200px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Sub-theme pill */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        backgroundColor: "#1976d2",
+                        color: "#fff",
+                        padding: "4px 8px",
+                        borderRadius: "16px",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      {project.subTheme}
+                    </Box>
+
+                    <Avatar
+                      src={"/puzzle.svg"}
+                      alt={project.title}
+                      sx={{ width: 56, height: 56, marginBottom: 1 }}
+                    />
+                    <Typography variant="h6" gutterBottom>
+                      {project.title}
+                    </Typography>
+
+                    {/* Clamped Description */}
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      sx={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        WebkitLineClamp: 2,
+                        textOverflow: "ellipsis",
+                        textAlign: "left",
+                        width: "100%",
+                        marginBottom: 4, // Space for buttons
+                      }}
+                    >
+                      {project.description}
+                    </Typography>
+
+                    {/* Buttons */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: 8,
+                        left: 8,
+                      }}
+                    >
+                      <Button variant="text" color="primary" size="small">
+                        View details
+                      </Button>
+                    </Box>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: 8,
+                        right: 8,
+                      }}
+                    >
+                      <Button
+                        variant="text"
+                        color="warning"
+                        size="small"
+                        onClick={() => handleOpenDeleteDialog(project._id)}
+                        // onClick={() => handleDelete(project._id)}
+                      >
+                        Delete project
+                      </Button>
+                    </Box>
+                  </Card>
+                </Grid>
+              ))
+            ) : (
+              <Container disableGutters>
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  height="50vh"
                   sx={{
-                    position: "relative",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    padding: 2,
-                    textAlign: "center",
-                    height: "200px",
-                    overflow: "hidden",
+                    bgcolor: "whitesmoke",
+                    color: "#7d7d7d",
+                    borderRadius: "1rem",
+                    marginTop: "2rem",
+                    marginBottom: "2rem",
+                    marginLeft: "1rem",
                   }}
                 >
-                  {/* Sub-theme pill */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      backgroundColor: "#1976d2",
-                      color: "#fff",
-                      padding: "4px 8px",
-                      borderRadius: "16px",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {project.subTheme}
-                  </Box>
-
-                  <Avatar
-                    src={project.icon}
-                    alt={project.title}
-                    sx={{ width: 56, height: 56, marginBottom: 1 }}
-                  />
-                  <Typography variant="h6" gutterBottom>
-                    {project.title}
-                  </Typography>
-
-                  {/* Clamped Description */}
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    sx={{
-                      display: "-webkit-box",
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      WebkitLineClamp: 2,
-                      textOverflow: "ellipsis",
-                      textAlign: "left",
-                      width: "100%",
-                      marginBottom: 4, // Space for buttons
-                    }}
-                  >
-                    {project.description}
-                  </Typography>
-
-                  {/* Buttons */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      bottom: 8,
-                      left: 8,
-                    }}
-                  >
-                    {/* <Button variant="text" color="primary" size="small">
-                      View details
-                    </Button> */}
-                    <Chip
-                      sx={{
-                        marginLeft: "auto",
-                        fontSize: "0.8rem",
-                        color: "white",
-                        backgroundColor: "gray",
-                      }}
-                      icon={<SaveAs fontSize="small" htmlColor="white" />}
-                      label="Draft"
-                    />
-                  </Box>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                    }}
-                  >
-                    <Button variant="text" color="primary" size="small">
-                      View details
-                    </Button>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
+                  <HourglassDisabled style={{ fontSize: 50 }} />
+                  <Typography variant="h5">No projects found!</Typography>
+                </Box>
+              </Container>
+            )}
           </Grid>
 
           {/* Main Dialog */}
@@ -372,13 +439,13 @@ const BuildProjectPage = () => {
                   value={formData.subTheme}
                   onChange={(e) => handleFormChange("subTheme", e.target.value)}
                 >
-                  <MenuItem value="HealthAndWellbeing">
+                  <MenuItem value="Health & Wellbeing">
                     Health & Wellbeing
                   </MenuItem>
-                  <MenuItem value="DigitalEducation">
+                  <MenuItem value="Digital Education">
                     Digital Education
                   </MenuItem>
-                  <MenuItem value="SustainabilityAndGreenTech">
+                  <MenuItem value="Sustainability & GreenTech">
                     Sustainability & GreenTech
                   </MenuItem>
                 </Select>
@@ -472,22 +539,38 @@ const BuildProjectPage = () => {
             <DialogTitle>Confirm Submission</DialogTitle>
             <DialogContent>
               <Typography>
-                Your project will be sent to the jury. Do you want to save as a
-                draft or submit now?
+                Your project will be sent to the jury. Do you want to submit
+                now?
               </Typography>
             </DialogContent>
             <DialogActions>
               <Button
-                onClick={() => handleConfirmation("saved as draft")}
+                onClick={() => setConfirmationDialog(false)}
                 color="secondary"
               >
-                Save as draft
+                Cancel
               </Button>
-              <Button
-                onClick={() => handleConfirmation("submitted")}
-                color="primary"
-              >
+              <Button onClick={() => handleConfirmation()} color="primary">
                 Submit
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Confirmation Dialog */}
+          <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Are you sure you want to delete this project? This action cannot
+                be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDeleteDialog} color="primary">
+                Cancel
+              </Button>
+              <Button color="error" onClick={() => handleDelete()}>
+                Delete
               </Button>
             </DialogActions>
           </Dialog>

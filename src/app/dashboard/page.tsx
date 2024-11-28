@@ -49,6 +49,7 @@ const Dashboard = () => {
   const [completedLevels, setCompletedLevels] = useState(0);
   const [totalLevels, setTotalLevels] = useState(0);
   const [levelProgress, setLevelProgress] = useState(0);
+  const [projects, setProjects] = useState<FormData[]>([]);
   // const [completedProjects, setCompletedProjects] = useState(0);
   // const [totalProjects, setTotalProjects] = useState(0);
   // const [projectProgress, setProjectProgress] = useState(0);
@@ -106,6 +107,25 @@ const Dashboard = () => {
     }
   }, [email]);
 
+  useEffect(() => {
+    const fetchParticipantProject = async () => {
+      try {
+        const response = await axios.post(
+          `https://progressbot-vzd5.onrender.com/api/v1/project/participant`,
+          {
+            email: email,
+          }
+        );
+
+        setProjects(response.data.data);
+      } catch (error) {
+        console.error("Failed to get projects for participant:", error);
+      }
+    };
+
+    fetchParticipantProject();
+  }, [email]);
+
   return (
     <>
       <Navbar />
@@ -153,10 +173,17 @@ const Dashboard = () => {
               </Box>
 
               <Box>
-                <Typography variant="body1">Projects Built: 0 / 0</Typography>
+                <Typography variant="body1">
+                  Projects Built: {projects.length > 0 ? projects.length : 0} /
+                  {projects.length > 0 ? projects.length : 0}
+                </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={0}
+                  value={
+                    projects.length > 0
+                      ? (projects.length / projects.length) * 100
+                      : 0
+                  }
                   sx={{ height: 20 }}
                 />
               </Box>

@@ -34,8 +34,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
 import useParticipantStore from "@/store/participantStore";
-import {registerFieldAngle, FieldAngle} from '@blockly/field-angle';
-
+import { registerFieldAngle, FieldAngle } from "@blockly/field-angle";
 
 type Position = {
   x: number;
@@ -43,7 +42,6 @@ type Position = {
 };
 
 enum Direction {
-
   Angle45 = 9,
   LEFT = 99,
   RIGHT = 40,
@@ -68,8 +66,8 @@ function App() {
   const [openModal, setOpenModal] = useState(false);
   const [angle, setPropAngle] = useState<number>(0);
 
-  const [wormVisible , setwormVisible] = useState<boolean>(true);
-  const [nestVisible , setnestVisible] = useState<boolean>(true);
+  const [wormVisible, setwormVisible] = useState<boolean>(true);
+  const [nestVisible, setnestVisible] = useState<boolean>(true);
 
   const [completed, setcompleted] = useState<boolean>(false);
 
@@ -80,23 +78,22 @@ function App() {
   };
 
   const initializeBlockly = () => {
-    registerFieldAngle()
-    Blockly.Blocks['set_angle'] = {
-        init: function () {
-            this.appendDummyInput()
-            .appendField("heading")
-            .appendField(new FieldAngle(90), "ANGLE");
-            this.setPreviousStatement(true, null);
-            this.setNextStatement(true, null);
-            this.setColour(230);
-            this.setTooltip("Sets an angle for movement.");
-            this.setHelpUrl("");
-        }
+    registerFieldAngle();
+    Blockly.Blocks["set_angle"] = {
+      init: function () {
+        this.appendDummyInput()
+          .appendField("heading")
+          .appendField(new FieldAngle(90), "ANGLE");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(230);
+        this.setTooltip("Sets an angle for movement.");
+        this.setHelpUrl("");
+      },
     };
-    
-    javascriptGenerator.forBlock["set_angle"] = function (block) {
 
-      return `setAngle(${block.getFieldValue('ANGLE')});\n`;
+    javascriptGenerator.forBlock["set_angle"] = function (block) {
+      return `setAngle(${block.getFieldValue("ANGLE")});\n`;
     };
   };
 
@@ -104,25 +101,24 @@ function App() {
     initializeBlockly();
   }, []);
 
-  const setMovement = (position : Position , angle : number) => {
+  const setMovement = (position: Position, angle: number) => {
+    setPosition({
+      x: position.x * Math.cos(angle),
+      y: position.y * Math.sin(-angle),
+    });
+  };
 
-    setPosition({ x: position.x * Math.cos(angle), y: position.y * Math.sin(-angle) });
-
-  }
-
-  const setAngle = (currentState: CurrentMovementState) : CurrentMovementState => {
-
+  const setAngle = (
+    currentState: CurrentMovementState
+  ): CurrentMovementState => {
     setFrame(Direction.Angle45);
-
 
     currentState.current_direction = Direction.Angle45;
     currentState.current_step += 1;
 
-
     return currentState;
+  };
 
-  }
-  
   const runCode = () => {
     if (workspaceRef.current) {
       setcompleted(true);
@@ -144,28 +140,25 @@ function App() {
             return;
           }
           flushSync(() => {
-            
-
             if (commands[i].includes("setAngle")) {
-
-              if (commands[i] != 'setAngle(45);') {
-                toast.error(`Incorrect angle set. Please set angle to 45 degrees`);
-                return
+              if (commands[i] != "setAngle(45);") {
+                toast.error(
+                  `Incorrect angle set. Please set angle to 45 degrees`
+                );
+                return;
               }
               currentMovementState = setAngle(currentMovementState);
-              setMovement({x:40,y:40}, 45);
+              setMovement({ x: 40, y: 40 }, 45);
 
               setTimeout(() => {
-                  setwormVisible(false);
-              } , 600)
+                setwormVisible(false);
+              }, 600);
 
               setTimeout(() => {
-                  setnestVisible(false);
-                  setOpenModal(true);
-              } , 650)
-
+                setnestVisible(false);
+                setOpenModal(true);
+              }, 650);
             }
-
           });
           i++;
         }, 500);
@@ -175,8 +168,8 @@ function App() {
 
   const resetProgram = () => {
     setPosition({ x: 0, y: 0 });
-    setnestVisible(true)
-    setwormVisible(true)
+    setnestVisible(true);
+    setwormVisible(true);
     setcompleted(false);
     setFrame(Direction.LEFT);
   };
@@ -187,10 +180,10 @@ function App() {
         `https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress`,
         {
           participant: email,
-          challengeId: "672d1513bc573ddbaf73b560",
-          levelId: "672d177624ce330bc1ba79d3",
+          challengeId: "6748eb650a2fba264a22e700",
+          levelId: "6748ecdf0a2fba264a22e702",
           score: 10,
-          completed: true
+          completed: true,
         }
       );
       console.log("Progress updated:", response.data);
@@ -278,9 +271,7 @@ function App() {
                       kind: "category",
                       name: "Actions",
                       colour: "blue",
-                      contents: [
-                        { kind: "block", type: "set_angle" },
-                      ],
+                      contents: [{ kind: "block", type: "set_angle" }],
                     },
                   ],
                 }}
@@ -293,35 +284,33 @@ function App() {
             </Paper>
 
             <Paper className="mazeoneRun">
-                <Bird frame={frame} position={position} />
-                {
-                    wormVisible && <img
-                    src="/challengeicons/worm.png"
-                    width={87}
-                    height={108}
-                    style={{
-                        position : 'relative',
-                        right : '10dvw',
-                    }}
-                    alt="Marker"
-                    />
-                }
+              <Bird frame={frame} position={position} />
+              {wormVisible && (
+                <img
+                  src="/challengeicons/worm.png"
+                  width={87}
+                  height={108}
+                  style={{
+                    position: "relative",
+                    right: "10dvw",
+                  }}
+                  alt="Marker"
+                />
+              )}
 
-                {
-                    nestVisible && <img
-                    src="/challengeicons/nest.png"
-                    width={87}
-                    height={108}
-                    style={{
-                        position : 'relative',
-                        bottom : '10dvh',
-                        right : '10dvw',
-        
-                    }}
-                    alt="Marker"
-                    />
-                }
-                
+              {nestVisible && (
+                <img
+                  src="/challengeicons/nest.png"
+                  width={87}
+                  height={108}
+                  style={{
+                    position: "relative",
+                    bottom: "10dvh",
+                    right: "10dvw",
+                  }}
+                  alt="Marker"
+                />
+              )}
             </Paper>
           </div>
         </div>

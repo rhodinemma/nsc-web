@@ -37,6 +37,7 @@ import { toast } from "sonner";
 interface Participant {
   id: number;
   name: string;
+  email: string;
 }
 
 interface FormData {
@@ -48,12 +49,6 @@ interface FormData {
   description: string;
   file: string | null;
 }
-
-const availableParticipants: Participant[] = [
-  { id: 1, name: "Alice Johnson" },
-  { id: 2, name: "Bob Smith" },
-  { id: 3, name: "Charlie Davis" },
-];
 
 const BuildProjectPage = () => {
   const router = useRouter();
@@ -77,6 +72,40 @@ const BuildProjectPage = () => {
 
   const [uploading, setUploading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  const [availableParticipants, setAvailableParticipants] = useState<
+    Participant[]
+  >([]);
+
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      try {
+        const response = await axios.get(
+          "https://api.nationalscratchcompetition.org/api/users?page=1&paginator=100",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        const participants = response.data.data.data.map(
+          (user: Participant) => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+          })
+        );
+        setAvailableParticipants(participants);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching participants:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchParticipants();
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -165,6 +194,10 @@ const BuildProjectPage = () => {
   const handleConfirmation = async () => {
     setConfirmationDialog(false);
 
+    const transformedParticipants = formData.participants.map(
+      (participant) => participant.name
+    );
+
     try {
       const response = await axios.post(
         `https://progressbot-vzd5.onrender.com/api/v1/project`,
@@ -173,7 +206,7 @@ const BuildProjectPage = () => {
           subTheme: formData.subTheme,
           participantType: formData.participantType,
           participant: email,
-          participants: formData.participants,
+          participants: transformedParticipants,
           description: formData.description,
           file: formData.file,
         }

@@ -154,6 +154,8 @@ const Login = () => {
       setUsername(response.data.user?.name);
       setUserEmail(response.data.user?.email);
 
+      localStorage.setItem("token", response.data?.access_token);
+
       // Redirect to the dashboard
       router.push("/dashboard");
     } catch (err) {

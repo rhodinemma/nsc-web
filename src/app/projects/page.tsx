@@ -266,7 +266,7 @@ const BuildProjectPage = () => {
                   <CircularProgress />
                 </Box>
               </Container>
-            ) : !loading ? (
+            ) : !loading && projects?.length > 0 ? (
               projects?.map((project, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Card

@@ -40,6 +40,7 @@ interface Participant {
 }
 
 interface FormData {
+  _id?: string;
   title: string;
   subTheme: string;
   participantType: string;
@@ -346,7 +347,7 @@ const BuildProjectPage = () => {
                         variant="text"
                         color="warning"
                         size="small"
-                        onClick={() => handleOpenDeleteDialog(project._id)}
+                        onClick={() => handleOpenDeleteDialog(project._id!)}
                         // onClick={() => handleDelete(project._id)}
                       >
                         Delete project

@@ -41,6 +41,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import useJuryStore from "@/store/projectStore";
 import { useRouter } from "next/navigation";
+import useJuryAuthStore from "@/store/juryStore";
 
 interface Participant {
   name: string;
@@ -60,11 +61,38 @@ interface ProjectData {
   finalScore?: string;
 }
 
+interface Criterion {
+  _id: string;
+  criterion: string;
+  score: number;
+}
+
+interface Submission {
+  _id: string;
+  juryId: string;
+  projectId: string;
+  criteria: Criterion[];
+  totalScore: number;
+  submittedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface ProjectScoreType {
+  _id: string;
+  averageScore: number;
+  submissions: Submission[];
+}
+
 const JuryDashboardPage = () => {
   const router = useRouter();
 
   // for submission to backend
-  const jury = useJuryStore((state) => state.jury);
+  const juryName = useJuryAuthStore((state) => state.juryName);
+  const juryEmail = useJuryAuthStore((state) => state.juryEmail);
+  const juryRole = useJuryAuthStore((state) => state.juryRole);
+  const juryId = useJuryAuthStore((state) => state.juryId);
   const setJuryProject = useJuryStore((state) => state.setJuryProject);
 
   const dummyProjectData: ProjectData[] = [
@@ -104,17 +132,6 @@ const JuryDashboardPage = () => {
         { criterion: "Presentation and Usability", score: 8 },
       ],
     },
-    {
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      criteria: [
-        { criterion: "Creativity and Innovation", score: 9 },
-        { criterion: "Technical Proficiency", score: 8 },
-        { criterion: "Relevance to Theme", score: 8 },
-        { criterion: "Impact and Engagement", score: 9 },
-        { criterion: "Presentation and Usability", score: 10 },
-      ],
-    },
   ];
 
   const [allAssessors, setAllAssessors] = useState([
@@ -131,17 +148,20 @@ const JuryDashboardPage = () => {
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
-  const [openAssignDialog, setOpenAssignDialog] = useState(false);
+
+  const [projectScore, setProjectScore] = useState<ProjectScoreType | null>(
+    null
+  );
 
   useEffect(() => {
     setLoading(true);
     const fetchAllProjects = async () => {
       try {
         const response = await axios.get(
-          "https://progressbot-vzd5.onrender.com/api/v1/project/all"
+          `http://localhost:3002/api/v1/identities/${juryId}/projects?role=${juryRole}`
         );
 
-        setProjects(response.data.data);
+        setProjects(response.data.data.projects);
         setTimeout(() => {
           setLoading(false);
         }, 2000);
@@ -151,7 +171,7 @@ const JuryDashboardPage = () => {
     };
 
     fetchAllProjects();
-  }, []);
+  }, [juryId, juryRole]);
 
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
@@ -160,8 +180,23 @@ const JuryDashboardPage = () => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
+  const getProjectScores = async (projectId: string) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3002/api/v1/identities/projects/${projectId}`
+      );
+
+      setProjectScore(response.data.data);
+    } catch (error) {
+      console.error("Failed to get all projects:", error);
+    }
+  };
+
   const handleReviewProject = (project: ProjectData) => {
     setReviewProject(project);
+
+    getProjectScores(project?._id ?? "");
+
     setOpenReviewDialog(true);
   };
 
@@ -180,14 +215,6 @@ const JuryDashboardPage = () => {
 
     // redirect to review page
     router.push("/admin/dashboard/review");
-  };
-
-  const handleAssignProject = () => {
-    setOpenAssignDialog(true);
-  };
-
-  const handleCloseAssignProject = () => {
-    setOpenAssignDialog(false);
   };
 
   const handleDownload = async (fileId: string, fileName: string) => {
@@ -283,16 +310,18 @@ const JuryDashboardPage = () => {
               <Typography variant="h5">All projects</Typography>
               <Chip size="small" label={projects.length} color="primary" />
             </Box>
-            <Box>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleOpenDialog}
-                startIcon={<Grid4x4 />}
-              >
-                Open score sheet
-              </Button>
-            </Box>
+            {juryRole === "Admin" && (
+              <Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleOpenDialog}
+                  startIcon={<Grid4x4 />}
+                >
+                  Open score sheet
+                </Button>
+              </Box>
+            )}
           </Box>
 
           {/* Content Section */}
@@ -506,110 +535,116 @@ const JuryDashboardPage = () => {
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Assigned Jury
-                  </Typography>
+                  {juryRole === "Admin" && (
+                    <>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Assigned Jury
+                      </Typography>
 
-                  {/* Dropdown for selecting assessors */}
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel id="assessor-select-label">
-                      Select Assessor
-                    </InputLabel>
-                    <Select
-                      labelId="assessor-select-label"
-                      value={selectedAssessor}
-                      onChange={(e) => setSelectedAssessor(e.target.value)}
-                    >
-                      {allAssessors
-                        .filter(
-                          (assessor) =>
-                            !selectedAssessors.includes(assessor.name)
-                        )
-                        .map((assessor) => (
-                          <MenuItem key={assessor.email} value={assessor.name}>
-                            {assessor.name} ({assessor.email})
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAssignAssessor}
-                    disabled={
-                      !selectedAssessor || selectedAssessors.length >= 3
-                    }
-                  >
-                    Assign Assessor
-                  </Button>
-
-                  <TableContainer style={{ marginBottom: "24px" }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Name
-                          </TableCell>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Email
-                          </TableCell>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Manage
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {allAssessors.map((assessor, index) => (
-                          <TableRow key={index}>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              {assessor.name}
-                            </TableCell>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              {assessor.email}
-                            </TableCell>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              <IconButton
-                                color="error"
-                                onClick={() =>
-                                  handleRemoveAssessor(assessor.email)
-                                }
+                      <FormControl fullWidth margin="normal">
+                        <InputLabel id="assessor-select-label">
+                          Select Assessor
+                        </InputLabel>
+                        <Select
+                          labelId="assessor-select-label"
+                          value={selectedAssessor}
+                          onChange={(e) => setSelectedAssessor(e.target.value)}
+                        >
+                          {allAssessors
+                            .filter(
+                              (assessor) =>
+                                !selectedAssessors.includes(assessor.name)
+                            )
+                            .map((assessor) => (
+                              <MenuItem
+                                key={assessor.email}
+                                value={assessor.name}
                               >
-                                <Delete />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                                {assessor.name} ({assessor.email})
+                              </MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleAssignAssessor}
+                        disabled={
+                          !selectedAssessor || selectedAssessors.length >= 3
+                        }
+                      >
+                        Assign Assessor
+                      </Button>
+
+                      <TableContainer style={{ marginBottom: "24px" }}>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell
+                                style={{
+                                  fontWeight: "bold",
+                                  border: "1px solid black",
+                                }}
+                              >
+                                Name
+                              </TableCell>
+                              <TableCell
+                                style={{
+                                  fontWeight: "bold",
+                                  border: "1px solid black",
+                                }}
+                              >
+                                Email
+                              </TableCell>
+                              <TableCell
+                                style={{
+                                  fontWeight: "bold",
+                                  border: "1px solid black",
+                                }}
+                              >
+                                Manage
+                              </TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {allAssessors.map((assessor, index) => (
+                              <TableRow key={index}>
+                                <TableCell
+                                  style={{
+                                    border: "1px solid black",
+                                  }}
+                                >
+                                  {assessor.name}
+                                </TableCell>
+                                <TableCell
+                                  style={{
+                                    border: "1px solid black",
+                                  }}
+                                >
+                                  {assessor.email}
+                                </TableCell>
+                                <TableCell
+                                  style={{
+                                    border: "1px solid black",
+                                  }}
+                                >
+                                  <IconButton
+                                    color="error"
+                                    onClick={() =>
+                                      handleRemoveAssessor(assessor.email)
+                                    }
+                                  >
+                                    <Delete />
+                                  </IconButton>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </>
+                  )}
 
                   {/* Table 2: Submitted Scoring Criteria */}
                   <Typography variant="h6" gutterBottom>
@@ -651,67 +686,48 @@ const JuryDashboardPage = () => {
                           >
                             Scores
                           </TableCell>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Final
-                          </TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {submittedScores.map((submission, index) => (
-                          <TableRow key={index}>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              {submission.name}
-                            </TableCell>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              {submission.email}
-                            </TableCell>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              <ul>
-                                {submission.criteria.map((item, i) => (
-                                  <li key={i}>
-                                    {item.criterion}: {item.score}/10
-                                  </li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                            <TableCell
-                              style={{
-                                border: "1px solid black",
-                              }}
-                            >
-                              {calculateAverageScore(submission.criteria)}/50
-                            </TableCell>
-                            {index === 0 && (
+                        {projectScore &&
+                          projectScore.submissions.map((submission, index) => (
+                            <TableRow key={index}>
                               <TableCell
-                                rowSpan={submittedScores.length}
                                 style={{
-                                  textAlign: "center",
-                                  verticalAlign: "middle",
                                   border: "1px solid black",
                                 }}
                               >
-                                62/75
+                                {juryName}
                               </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
+                              <TableCell
+                                style={{
+                                  border: "1px solid black",
+                                }}
+                              >
+                                {juryEmail}
+                              </TableCell>
+                              <TableCell
+                                style={{
+                                  border: "1px solid black",
+                                }}
+                              >
+                                <ul>
+                                  {submission.criteria.map((item, i) => (
+                                    <li key={i}>
+                                      {item.criterion}: {item.score}/10
+                                    </li>
+                                  ))}
+                                </ul>
+                              </TableCell>
+                              <TableCell
+                                style={{
+                                  border: "1px solid black",
+                                }}
+                              >
+                                {calculateAverageScore(submission.criteria)}/50
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>

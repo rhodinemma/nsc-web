@@ -10,40 +10,60 @@ import {
   TextField,
   Typography,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  IconButton,
+  DialogContent,
+  InputAdornment,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import useParticipantStore from "@/store/participantStore";
 import { toast } from "sonner";
+import { Close, Visibility, VisibilityOff } from "@mui/icons-material";
+import useJuryAuthStore from "@/store/juryStore";
 
 const Login = () => {
-  const { setUsername, setUserEmail, setToken } = useParticipantStore();
+  const router = useRouter();
+
+  const { setJuryid, setJuryname, setJuryemail, setJuryToken, setJuryRole } =
+    useJuryAuthStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-  const router = useRouter();
+  const [juryName, setJuryName] = useState("");
+  const [juryEmail, setJuryEmail] = useState("");
+  const [juryPassword, setJuryPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleOpenDialog = () => setOpenDialog(true);
+  const handleCloseDialog = () => setOpenDialog(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://api.nationalscratchcompetition.org/api/login",
+        "http://localhost:3002/api/v1/identities/login",
         {
-          username: email,
+          email,
           password,
         }
       );
 
       toast.success("Login successful!");
 
-      setToken(response.data?.access_token);
-      setUsername(response.data.user?.name);
-      setUserEmail(response.data.user?.email);
+      setJuryToken(response.data?.token);
+      setJuryid(response.data.identity?.id);
+      setJuryname(response.data.identity?.name);
+      setJuryemail(response.data.identity?.email);
+      setJuryRole(response.data.identity?.role);
 
-      localStorage.setItem("token", response.data?.access_token);
+      localStorage.setItem("juryToken", response.data?.token);
 
       // Redirect to the dashboard
       router.push("/admin/dashboard");
@@ -53,6 +73,42 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const data = {
+      name: juryName,
+      email: juryEmail,
+      passwordHash: juryPassword,
+    };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3002/api/v1/identities",
+        data,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      toast.success("Registration successful!");
+
+      console.log("Registration successful:", response.data);
+
+      handleCloseDialog();
+    } catch (error) {
+      toast.error("Failed to register!");
+      console.error("Error registering:", error);
+    }
+  };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleToggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -167,6 +223,15 @@ const Login = () => {
                 control={<Checkbox color="primary" />}
                 label="Remember me"
               />
+              <Typography variant="body2" align="center">
+                <a
+                  href="#"
+                  onClick={handleOpenDialog}
+                  style={{ color: "#304ffe" }}
+                >
+                  Click here to register
+                </a>
+              </Typography>
               <Button
                 variant="contained"
                 color="primary"
@@ -186,6 +251,101 @@ const Login = () => {
           </Box>
         </Grid>
       </Grid>
+
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {" "}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h6">Join the Jury team</Typography>
+            <IconButton onClick={handleCloseDialog} size="small">
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <form noValidate autoComplete="off" onSubmit={handleRegister}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Full name"
+              variant="outlined"
+              value={juryName}
+              onChange={(e) => setJuryName(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Email"
+              type="email"
+              variant="outlined"
+              value={juryEmail}
+              onChange={(e) => setJuryEmail(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              variant="outlined"
+              value={juryPassword}
+              onChange={(e) => setJuryPassword(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleTogglePasswordVisibility}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Confirm password"
+              type={showConfirmPassword ? "text" : "password"}
+              variant="outlined"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleToggleConfirmPasswordVisibility}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Box mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                fullWidth
+              >
+                Register
+              </Button>
+            </Box>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

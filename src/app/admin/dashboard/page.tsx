@@ -3,12 +3,13 @@ import AdminNavbar from "@/components/AdminNav";
 import {
   AssignmentTurnedIn,
   Close,
-  Delete,
   Download,
   FileOpen,
   Grid4x4,
+  HourglassDisabled,
 } from "@mui/icons-material";
 import {
+  Autocomplete,
   Avatar,
   Box,
   Button,
@@ -20,12 +21,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   Grid,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -33,6 +30,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import axios from "axios";
@@ -42,6 +40,18 @@ import { toast } from "sonner";
 import useJuryStore from "@/store/projectStore";
 import { useRouter } from "next/navigation";
 import useJuryAuthStore from "@/store/juryStore";
+
+interface Assessor {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface AssignedAssessor {
+  _id: string;
+  name: string;
+  email: string;
+}
 
 interface Participant {
   name: string;
@@ -95,63 +105,96 @@ const JuryDashboardPage = () => {
   const juryId = useJuryAuthStore((state) => state.juryId);
   const setJuryProject = useJuryStore((state) => state.setJuryProject);
 
-  const dummyProjectData: ProjectData[] = [
-    {
-      title: "Clean Energy Initiative",
-      subTheme: "Sustainability and GreenTech",
-      description: "A project focused on renewable energy solutions.",
-      participantType: "Individual",
-      participant: "Nagwere Rhodin Emmanuel",
-      finalScore: "63/75",
-    },
-    {
-      title: "Digital Learning Platform",
-      subTheme: "Digital Education",
-      description: "An interactive platform for online education.",
-      participantType: "Team",
-      participants: [
-        "Wanyenya Pretty Phemia",
-        "Nabuti George William",
-        "Ntambi Nessim",
-        "Wandera Phillip",
-      ],
-      finalScore: "53/75",
-    },
-  ];
-
-  // Dummy data for submitted scores
-  const submittedScores = [
-    {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      criteria: [
-        { criterion: "Creativity and Innovation", score: 8 },
-        { criterion: "Technical Proficiency", score: 7 },
-        { criterion: "Relevance to Theme", score: 9 },
-        { criterion: "Impact and Engagement", score: 10 },
-        { criterion: "Presentation and Usability", score: 8 },
-      ],
-    },
-  ];
-
-  const [allAssessors, setAllAssessors] = useState([
-    { name: "John Doe", email: "john.doe@example.com" },
-    { name: "Jane Smith", email: "jane.smith@example.com" },
-    { name: "Alice Brown", email: "alice.brown@example.com" },
-    { name: "Bob Johnson", email: "bob.johnson@example.com" },
-  ]);
-  const [selectedAssessors, setSelectedAssessors] = useState<string[]>([]);
-  const [selectedAssessor, setSelectedAssessor] = useState("");
+  const [assessors, setAssessors] = useState<Assessor[]>([]);
+  const [selectedAssessor, setSelectedAssessor] = useState<Assessor | null>(
+    null
+  );
+  const [assignedAssessors, setAssignedAssessors] = useState<
+    AssignedAssessor[]
+  >([]);
 
   const [loading, setLoading] = useState(false);
   const [reviewProject, setReviewProject] = useState<ProjectData | null>(null);
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
+  const [checkSubmission, setCheckSubmission] = useState<
+    Record<string, boolean>
+  >({});
 
   const [projectScore, setProjectScore] = useState<ProjectScoreType | null>(
     null
   );
+
+  // Fetch all assessors
+  useEffect(() => {
+    const fetchAssessors = async () => {
+      try {
+        const response = await axios.get<{ status: string; data: Assessor[] }>(
+          "http://localhost:3002/api/v1/identities"
+        );
+        setAssessors(response.data.data);
+      } catch (error) {
+        console.error("Error fetching assessors:", error);
+      }
+    };
+
+    fetchAssessors();
+  }, []);
+
+  // Assign an assessor to the project
+  const handleAssign = async (projectId: string) => {
+    if (!selectedAssessor) return;
+
+    const data = {
+      projectId,
+      juryId: selectedAssessor._id,
+    };
+
+    try {
+      await axios.post(
+        "http://localhost:3002/api/v1/identities/assign-project",
+        data,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      setAssignedAssessors((prev) => [...prev, selectedAssessor]);
+      setSelectedAssessor(null);
+      toast.success("Assigned project successfully!");
+    } catch (error) {
+      console.error("Error assigning assessor:", error);
+    }
+  };
+
+  // Remove an assessor from the project
+  const handleRemove = async (projectId: string, juryId: string) => {
+    const data = {
+      projectId,
+      juryId,
+    };
+
+    try {
+      await axios.post(
+        "http://localhost:3002/api/v1/identities/remove-project",
+        data,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      setAssignedAssessors((prev) =>
+        prev.filter((assessor) => assessor._id !== juryId)
+      );
+      toast.success("Removed from project successfully!");
+    } catch (error) {
+      console.error("Error removing assessor:", error);
+    }
+  };
+
+  // useEffect(() => {
+
+  //   fetchAssignedAssessors();
+  // }, [projectId]);
 
   useEffect(() => {
     setLoading(true);
@@ -173,6 +216,33 @@ const JuryDashboardPage = () => {
     fetchAllProjects();
   }, [juryId, juryRole]);
 
+  const fetchSubmissionStatus = async (projectId: string): Promise<boolean> => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3002/api/v1/identities/check-submission/${juryId}/${projectId}`
+      );
+      return response.data.hasSubmitted; // Assuming the API returns `true` or `false`
+    } catch (error) {
+      console.error("Error fetching submission status:", error);
+      return false; // Default to false if there is an error
+    }
+  };
+
+  useEffect(() => {
+    const fetchAllStatuses = async () => {
+      const statuses: Record<string, boolean> = {};
+      for (const project of projects) {
+        if (project._id) {
+          const status = await fetchSubmissionStatus(project._id);
+          statuses[project._id] = status;
+        }
+      }
+      setCheckSubmission(statuses);
+    };
+
+    fetchAllStatuses();
+  }, [projects, juryId]);
+
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
 
@@ -192,8 +262,22 @@ const JuryDashboardPage = () => {
     }
   };
 
+  const fetchAssignedAssessors = async (projectId: string) => {
+    try {
+      const response = await axios.get<{
+        status: string;
+        data: AssignedAssessor[];
+      }>(`http://localhost:3002/api/v1/identities/check-jury/${projectId}`);
+      setAssignedAssessors(response.data.data);
+    } catch (error) {
+      console.error("Error fetching assigned assessors:", error);
+    }
+  };
+
   const handleReviewProject = (project: ProjectData) => {
     setReviewProject(project);
+
+    fetchAssignedAssessors(project?._id ?? "");
 
     getProjectScores(project?._id ?? "");
 
@@ -220,7 +304,7 @@ const JuryDashboardPage = () => {
   const handleDownload = async (fileId: string, fileName: string) => {
     try {
       const response = await fetch(
-        `https://progressbot-vzd5.onrender.com/api/v1/uploads/view/${fileId}`
+        `http://localhost:3002/api/v1/uploads/view/${fileId}`
       );
       if (!response.ok) {
         toast.error("Issue detected downloading project file!");
@@ -251,17 +335,6 @@ const JuryDashboardPage = () => {
     }
   };
 
-  const handleAssignAssessor = () => {
-    if (
-      selectedAssessor &&
-      !selectedAssessors.includes(selectedAssessor) &&
-      selectedAssessors.length < 3
-    ) {
-      setSelectedAssessors([...selectedAssessors, selectedAssessor]);
-    }
-    setSelectedAssessor("");
-  };
-
   const calculateAverageScore = (
     criteria: { criterion: string; score: number }[]
   ) => {
@@ -269,12 +342,7 @@ const JuryDashboardPage = () => {
     return total;
   };
 
-  const handleRemoveAssessor = (email: string) => {
-    const updatedList = allAssessors.filter(
-      (assessor) => assessor.email !== email
-    );
-    setAllAssessors(updatedList);
-  };
+  console.log("length", projectScore?.submissions.length);
 
   return (
     <>
@@ -308,7 +376,7 @@ const JuryDashboardPage = () => {
             {/* <Typography variant="h5">All projects</Typography> */}
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="h5">All projects</Typography>
-              <Chip size="small" label={projects.length} color="primary" />
+              <Chip size="small" label={projects?.length} color="primary" />
             </Box>
             {juryRole === "Admin" && (
               <Box>
@@ -416,27 +484,33 @@ const JuryDashboardPage = () => {
                         Review
                       </Button>
 
-                      <Button
-                        variant="text"
-                        color="primary"
-                        size="small"
-                        startIcon={<AssignmentTurnedIn />}
-                        onClick={() => handleAssessProject(project)}
-                      >
-                        Mark
-                      </Button>
+                      {/* Conditionally render "Mark" button */}
+                      {!checkSubmission[project._id ?? ""] && (
+                        <Button
+                          variant="text"
+                          color="primary"
+                          size="small"
+                          startIcon={<AssignmentTurnedIn />}
+                          onClick={() => handleAssessProject(project)}
+                        >
+                          Mark
+                        </Button>
+                      )}
 
-                      <Button
-                        variant="text"
-                        color="primary"
-                        size="small"
-                        startIcon={<Download />}
-                        onClick={() =>
-                          handleDownload(project?.file ?? "", project?.title)
-                        }
-                      >
-                        Download
-                      </Button>
+                      {/* Conditionally render "Download" button */}
+                      {!checkSubmission[project._id ?? ""] && (
+                        <Button
+                          variant="text"
+                          color="primary"
+                          size="small"
+                          startIcon={<Download />}
+                          onClick={() =>
+                            handleDownload(project?.file ?? "", project?.title)
+                          }
+                        >
+                          Download
+                        </Button>
+                      )}
                     </Box>
                   </Card>
                 </Grid>
@@ -537,180 +611,125 @@ const JuryDashboardPage = () => {
                 <Box>
                   {juryRole === "Admin" && (
                     <>
-                      <Typography variant="subtitle2" color="text.secondary">
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         Assigned Jury
                       </Typography>
 
-                      <FormControl fullWidth margin="normal">
-                        <InputLabel id="assessor-select-label">
-                          Select Assessor
-                        </InputLabel>
-                        <Select
-                          labelId="assessor-select-label"
-                          value={selectedAssessor}
-                          onChange={(e) => setSelectedAssessor(e.target.value)}
-                        >
-                          {allAssessors
-                            .filter(
-                              (assessor) =>
-                                !selectedAssessors.includes(assessor.name)
-                            )
-                            .map((assessor) => (
-                              <MenuItem
-                                key={assessor.email}
-                                value={assessor.name}
-                              >
-                                {assessor.name} ({assessor.email})
-                              </MenuItem>
-                            ))}
-                        </Select>
-                      </FormControl>
+                      <Autocomplete
+                        options={assessors}
+                        getOptionLabel={(option) =>
+                          `${option.name} (${option.email})`
+                        }
+                        value={selectedAssessor}
+                        onChange={(event, newValue) =>
+                          setSelectedAssessor(newValue)
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Select Jury"
+                            variant="outlined"
+                          />
+                        )}
+                        sx={{ mb: 2, width: "100%", maxWidth: 400 }}
+                      />
 
                       <Button
                         variant="contained"
                         color="primary"
-                        onClick={handleAssignAssessor}
-                        disabled={
-                          !selectedAssessor || selectedAssessors.length >= 3
-                        }
+                        onClick={() => handleAssign(reviewProject?._id ?? "")}
+                        disabled={!selectedAssessor}
                       >
-                        Assign Assessor
+                        Assign jury
                       </Button>
 
                       <TableContainer style={{ marginBottom: "24px" }}>
+                        {/* Table of Assigned Assessors */}
                         <Table>
                           <TableHead>
                             <TableRow>
-                              <TableCell
-                                style={{
-                                  fontWeight: "bold",
-                                  border: "1px solid black",
-                                }}
-                              >
-                                Name
-                              </TableCell>
-                              <TableCell
-                                style={{
-                                  fontWeight: "bold",
-                                  border: "1px solid black",
-                                }}
-                              >
-                                Email
-                              </TableCell>
-                              <TableCell
-                                style={{
-                                  fontWeight: "bold",
-                                  border: "1px solid black",
-                                }}
-                              >
-                                Manage
-                              </TableCell>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Email</TableCell>
+                              <TableCell>Actions</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {allAssessors.map((assessor, index) => (
-                              <TableRow key={index}>
-                                <TableCell
-                                  style={{
-                                    border: "1px solid black",
-                                  }}
-                                >
-                                  {assessor.name}
-                                </TableCell>
-                                <TableCell
-                                  style={{
-                                    border: "1px solid black",
-                                  }}
-                                >
-                                  {assessor.email}
-                                </TableCell>
-                                <TableCell
-                                  style={{
-                                    border: "1px solid black",
-                                  }}
-                                >
-                                  <IconButton
-                                    color="error"
-                                    onClick={() =>
-                                      handleRemoveAssessor(assessor.email)
-                                    }
-                                  >
-                                    <Delete />
-                                  </IconButton>
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                            {assignedAssessors.length > 0
+                              ? assignedAssessors.map((assessor) => (
+                                  <TableRow key={assessor._id}>
+                                    <TableCell>{assessor.name}</TableCell>
+                                    <TableCell>{assessor.email}</TableCell>
+                                    <TableCell>
+                                      <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        onClick={() =>
+                                          handleRemove(
+                                            reviewProject?._id ?? "",
+                                            assessor._id
+                                          )
+                                        }
+                                      >
+                                        Remove
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              : null}
                           </TableBody>
                         </Table>
                       </TableContainer>
+
+                      {assignedAssessors.length === 0 && (
+                        <Box
+                          display="flex"
+                          flexDirection="column"
+                          justifyContent="center"
+                          alignItems="center"
+                          height="20vh"
+                          sx={{
+                            bgcolor: "whitesmoke",
+                            color: "#7d7d7d",
+                            borderRadius: "0.5rem",
+                            marginBottom: "1rem",
+                          }}
+                        >
+                          <HourglassDisabled style={{ fontSize: 20 }} />
+                          <Typography variant="body1">
+                            No jury assigned yet!
+                          </Typography>
+                        </Box>
+                      )}
                     </>
                   )}
 
                   {/* Table 2: Submitted Scoring Criteria */}
+                  {/* {juryRole === "Jury" && (
+                    <> */}
                   <Typography variant="h6" gutterBottom>
-                    Submitted scores
+                    Scores
                   </Typography>
                   <TableContainer>
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Name
-                          </TableCell>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Email
-                          </TableCell>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Criteria
-                          </TableCell>
-                          <TableCell
-                            style={{
-                              fontWeight: "bold",
-                              border: "1px solid black",
-                            }}
-                          >
-                            Scores
-                          </TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Email</TableCell>
+                          <TableCell>Criteria</TableCell>
+                          <TableCell>Scores</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {projectScore &&
                           projectScore.submissions.map((submission, index) => (
                             <TableRow key={index}>
-                              <TableCell
-                                style={{
-                                  border: "1px solid black",
-                                }}
-                              >
-                                {juryName}
-                              </TableCell>
-                              <TableCell
-                                style={{
-                                  border: "1px solid black",
-                                }}
-                              >
-                                {juryEmail}
-                              </TableCell>
-                              <TableCell
-                                style={{
-                                  border: "1px solid black",
-                                }}
-                              >
+                              <TableCell>{juryName}</TableCell>
+                              <TableCell>{juryEmail}</TableCell>
+                              <TableCell>
                                 <ul>
                                   {submission.criteria.map((item, i) => (
                                     <li key={i}>
@@ -719,18 +738,38 @@ const JuryDashboardPage = () => {
                                   ))}
                                 </ul>
                               </TableCell>
-                              <TableCell
-                                style={{
-                                  border: "1px solid black",
-                                }}
-                              >
-                                {calculateAverageScore(submission.criteria)}/50
+                              <TableCell>
+                                {calculateAverageScore(submission.criteria)}
+                                /50
                               </TableCell>
                             </TableRow>
                           ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
+
+                  {projectScore?.submissions.length === undefined && (
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="center"
+                      alignItems="center"
+                      height="20vh"
+                      sx={{
+                        bgcolor: "whitesmoke",
+                        color: "#7d7d7d",
+                        borderRadius: "0.5rem",
+                        marginTop: "1rem",
+                      }}
+                    >
+                      <HourglassDisabled style={{ fontSize: 20 }} />
+                      <Typography variant="body1">
+                        No scores submitted yet!
+                      </Typography>
+                    </Box>
+                  )}
+                  {/* </>
+                  )} */}
                 </Box>
               </Stack>
             </DialogContent>
@@ -757,7 +796,7 @@ const JuryDashboardPage = () => {
               </Box>
             </DialogTitle>
             <DialogContent>
-              <Table style={{ border: "1px solid black" }}>
+              {/* <Table style={{ border: "1px solid black" }}>
                 <TableHead>
                   <TableRow>
                     <TableCell
@@ -793,22 +832,22 @@ const JuryDashboardPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {dummyProjectData.map((project, index) => (
+                  {[].map((project, index) => (
                     <TableRow key={index}>
                       <TableCell style={{ border: "1px solid black" }}>
-                        {project.title}
+                        {project?.title}
                       </TableCell>
                       <TableCell style={{ border: "1px solid black" }}>
-                        {project.subTheme}
+                        {project?.subTheme}
                       </TableCell>
                       <TableCell style={{ border: "1px solid black" }}>
-                        {project.description}
+                        {project?.description}
                       </TableCell>
                       <TableCell style={{ border: "1px solid black" }}>
-                        {project.participantType}
+                        {project?.participantType}
                       </TableCell>
                       <TableCell style={{ border: "1px solid black" }}>
-                        {project.participantType === "Team" ? (
+                        {project?.participantType === "Team" ? (
                           project?.participants &&
                           project?.participants.map((participant, index) => (
                             <Chip
@@ -839,7 +878,7 @@ const JuryDashboardPage = () => {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table> */}
             </DialogContent>
             {/* Dialog Actions */}
             <DialogActions>

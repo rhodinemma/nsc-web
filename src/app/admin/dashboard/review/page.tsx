@@ -16,9 +16,14 @@ import {
 import { Checklist, Close, Info } from "@mui/icons-material";
 import AdminNavbar from "@/components/AdminNav";
 import useJuryStore from "@/store/projectStore";
+import axios from "axios";
+import useJuryAuthStore from "@/store/juryStore";
+import { toast } from "sonner";
 
 function AssessProjectPage() {
   const project = useJuryStore((state) => state.project);
+  const juryId = useJuryAuthStore((state) => state.juryId);
+
   const [openAssessDialog, setOpenAssessDialog] = useState(false);
   const [openInstructionsDialog, setOpenInstructionsDialog] = useState(true);
 
@@ -56,10 +61,32 @@ function AssessProjectPage() {
     setCriteriaScores(updatedCriteriaScores);
   };
 
-  const handleSubmit = () => {
-    console.log("Submitted Criteria Scores:", criteriaScores);
-    // Here you can send `criteriaScores` to your backend or process it further
-    handleCloseAssessDialog();
+  const handleSubmit = async () => {
+    const data = {
+      projectId: project?._id,
+      juryId: juryId,
+      criteria: criteriaScores,
+    };
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3002/api/v1/identities/mark-project`,
+        data,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      toast.success("Project marks submitted successfully!");
+
+      console.log("Project marks submitted:", response.data);
+
+      handleCloseAssessDialog();
+    } catch (error) {
+      console.error("Failed to get all projects:", error);
+    } finally {
+      handleCloseAssessDialog();
+    }
   };
 
   const toSentenceCase = (str: string) => {
@@ -132,7 +159,7 @@ function AssessProjectPage() {
           </Typography>
           <ol>
             <li>
-              Upload the project file. By clicking on the "File" option in the
+              Upload the project file. By clicking on the -File- option in the
               scratch editor menu bar
             </li>
             {/* <li>Review the provided screenshots below for reference.</li> */}

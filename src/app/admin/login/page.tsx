@@ -40,7 +40,7 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // const handleOpenDialog = () => setOpenDialog(true);
+  const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,7 +223,7 @@ const Login = () => {
                 control={<Checkbox color="primary" />}
                 label="Remember me"
               />
-              {/* <Typography variant="body2" align="center">
+              <Typography variant="body2" align="center">
                 <a
                   href="#"
                   onClick={handleOpenDialog}
@@ -231,7 +231,7 @@ const Login = () => {
                 >
                   Click here to register
                 </a>
-              </Typography> */}
+              </Typography>
               <Button
                 variant="contained"
                 color="primary"

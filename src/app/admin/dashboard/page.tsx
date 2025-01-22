@@ -34,7 +34,7 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import useJuryStore from "@/store/projectStore";
@@ -77,6 +77,11 @@ interface Criterion {
   score: number;
 }
 
+interface Jury {
+  name: string;
+  email: string;
+}
+
 interface Submission {
   _id: string;
   juryId: string;
@@ -87,19 +92,27 @@ interface Submission {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  jury?: Jury[];
 }
 
-interface ProjectScoreType {
-  _id: string;
+// interface ProjectScoreType {
+//   _id: string;
+//   averageScore: number;
+//   submissions: Submission[];
+// }
+
+interface AdminProjectData {
+  // _id: string;
   averageScore: number;
   submissions: Submission[];
+  project: ProjectData;
 }
 
 const JuryDashboardPage = () => {
   const router = useRouter();
 
   // for submission to backend
-  const juryName = useJuryAuthStore((state) => state.juryName);
+  // const juryName = useJuryAuthStore((state) => state.juryName);
   const juryEmail = useJuryAuthStore((state) => state.juryEmail);
   const juryRole = useJuryAuthStore((state) => state.juryRole);
   const juryId = useJuryAuthStore((state) => state.juryId);
@@ -112,6 +125,7 @@ const JuryDashboardPage = () => {
   const [assignedAssessors, setAssignedAssessors] = useState<
     AssignedAssessor[]
   >([]);
+  const [juryDetails, setJuryDetails] = useState<Jury | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [reviewProject, setReviewProject] = useState<ProjectData | null>(null);
@@ -122,9 +136,13 @@ const JuryDashboardPage = () => {
     Record<string, boolean>
   >({});
 
-  const [projectScore, setProjectScore] = useState<ProjectScoreType | null>(
+  const [projectScore, setProjectScore] = useState<Submission | null>(null);
+  const [adminScoreReview, setAdminScoreReview] = useState<Submission[] | null>(
     null
   );
+  const [adminProjectScore, setAdminProjectScore] = useState<
+    AdminProjectData[] | null
+  >(null);
 
   // Fetch all assessors
   useEffect(() => {
@@ -191,11 +209,6 @@ const JuryDashboardPage = () => {
     }
   };
 
-  // useEffect(() => {
-
-  //   fetchAssignedAssessors();
-  // }, [projectId]);
-
   useEffect(() => {
     setLoading(true);
     const fetchAllProjects = async () => {
@@ -216,17 +229,20 @@ const JuryDashboardPage = () => {
     fetchAllProjects();
   }, [juryId, juryRole]);
 
-  const fetchSubmissionStatus = async (projectId: string): Promise<boolean> => {
-    try {
-      const response = await axios.get(
-        `http://localhost:3002/api/v1/identities/check-submission/${juryId}/${projectId}`
-      );
-      return response.data.hasSubmitted; // Assuming the API returns `true` or `false`
-    } catch (error) {
-      console.error("Error fetching submission status:", error);
-      return false; // Default to false if there is an error
-    }
-  };
+  const fetchSubmissionStatus = useCallback(
+    async (projectId: string): Promise<boolean> => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3002/api/v1/identities/check-submission/${juryId}/${projectId}`
+        );
+        return response.data.hasSubmitted; // Assuming the API returns `true` or `false`
+      } catch (error) {
+        console.error("Error fetching submission status:", error);
+        return false; // Default to false if there is an error
+      }
+    },
+    [juryId]
+  );
 
   useEffect(() => {
     const fetchAllStatuses = async () => {
@@ -241,28 +257,117 @@ const JuryDashboardPage = () => {
     };
 
     fetchAllStatuses();
-  }, [projects, juryId]);
+  }, [projects, juryId, fetchSubmissionStatus]);
 
-  const handleOpenDialog = () => setOpenDialog(true);
+  const getAllProjectScores = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3002/api/v1/identities/project-scores`
+      );
+      setAdminProjectScore(response.data.data);
+      console.log("Project scores fetched:", response.data.data);
+    } catch (error) {
+      console.error("Failed to get all projects:", error);
+    }
+  }, []);
+
+  // const handleOpenDialog = () => {
+  //   // fetch all scores here
+  //   getAllProjectScores();
+  //   setOpenDialog(true);
+  // };
+
+  const handleOpenDialog = useCallback(() => {
+    // Call the API to fetch scores
+    getAllProjectScores();
+    setOpenDialog(true);
+  }, [getAllProjectScores]);
+
   const handleCloseDialog = () => setOpenDialog(false);
 
   const toSentenceCase = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
-  const getProjectScores = async (projectId: string) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:3002/api/v1/identities/projects/${projectId}`
+  // const findMatchingJuryMember = (
+  //   submissions: Submission[],
+  //   email: string
+  // ): { submission: Submission; jury: Jury } | null => {
+  //   const submission = submissions.find(
+  //     (submission) => submission.juryId === juryId
+  //   );
+
+  //   console.log("submission", submission);
+
+  //   if (submission && submission.jury && Array.isArray(submission.jury)) {
+  //     // Find the jury member within the matched submission
+  //     const jury = submission.jury.find(
+  //       (juryMember) => juryMember.email === email
+  //     );
+
+  //     if (jury) {
+  //       return { submission, jury };
+  //     }
+  //   }
+  //   return null;
+  // };
+
+  const findMatchingJuryMember = useCallback(
+    (
+      submissions: Submission[],
+      email: string
+    ): { submission: Submission; jury: Jury } | null => {
+      const submission = submissions.find(
+        (submission) => submission.juryId === juryId
       );
 
-      setProjectScore(response.data.data);
-    } catch (error) {
-      console.error("Failed to get all projects:", error);
-    }
-  };
+      console.log("submission", submission);
 
-  const fetchAssignedAssessors = async (projectId: string) => {
+      if (submission && submission.jury && Array.isArray(submission.jury)) {
+        // Find the jury member within the matched submission
+        const jury = submission.jury.find(
+          (juryMember) => juryMember.email === email
+        );
+
+        if (jury) {
+          return { submission, jury };
+        }
+      }
+      return null;
+    },
+    [juryId]
+  );
+
+  const getProjectScores = useCallback(
+    async (projectId: string) => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3002/api/v1/identities/projects/${projectId}`
+        );
+        if (juryRole === "Admin") {
+          setAdminScoreReview(response.data.data.submissions);
+        }
+
+        const result = findMatchingJuryMember(
+          response.data.data.submissions,
+          juryEmail
+        );
+
+        if (result !== null) {
+          console.log("exists", result?.jury);
+          setJuryDetails(result?.jury ?? null);
+          setProjectScore(result?.submission ?? null);
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Failed to get all projects:", error);
+      }
+    },
+    [findMatchingJuryMember, juryEmail, juryRole]
+  );
+
+  const fetchAssignedAssessors = useCallback(async (projectId: string) => {
     try {
       const response = await axios.get<{
         status: string;
@@ -272,12 +377,16 @@ const JuryDashboardPage = () => {
     } catch (error) {
       console.error("Error fetching assigned assessors:", error);
     }
-  };
+  }, []);
 
   const handleReviewProject = (project: ProjectData) => {
     setReviewProject(project);
 
     fetchAssignedAssessors(project?._id ?? "");
+
+    // Clear previous state before fetching
+    setAdminScoreReview([]);
+    setProjectScore(null);
 
     getProjectScores(project?._id ?? "");
 
@@ -286,6 +395,9 @@ const JuryDashboardPage = () => {
 
   const handleCloseReviewProject = () => {
     setReviewProject(null);
+    setAdminProjectScore([]);
+    setProjectScore(null);
+    setAssignedAssessors([]);
     setOpenReviewDialog(false);
   };
 
@@ -341,8 +453,6 @@ const JuryDashboardPage = () => {
     const total = criteria.reduce((sum, item) => sum + item.score, 0);
     return total;
   };
-
-  console.log("length", projectScore?.submissions.length);
 
   return (
     <>
@@ -573,14 +683,17 @@ const JuryDashboardPage = () => {
                         Team members
                       </Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap">
-                        {reviewProject?.participants.map((participant) => (
-                          <Chip
-                            key={participant}
-                            label={participant}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
+                        {reviewProject?.participants.map(
+                          (participant, index) => (
+                            <Chip
+                              key={index}
+                              // label={participant}
+                              label={participant as unknown as string}
+                              size="small"
+                              variant="outlined"
+                            />
+                          )
+                        )}
                       </Stack>
                     </Box>
                   )}
@@ -724,50 +837,103 @@ const JuryDashboardPage = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {projectScore &&
-                          projectScore.submissions.map((submission, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{juryName}</TableCell>
-                              <TableCell>{juryEmail}</TableCell>
-                              <TableCell>
-                                <ul>
-                                  {submission.criteria.map((item, i) => (
-                                    <li key={i}>
-                                      {item.criterion}: {item.score}/10
-                                    </li>
-                                  ))}
-                                </ul>
-                              </TableCell>
-                              <TableCell>
-                                {calculateAverageScore(submission.criteria)}
-                                /50
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                        {juryRole === "Admin" ? (
+                          adminScoreReview &&
+                          adminScoreReview?.map(
+                            (submission: Submission, index: number) => (
+                              <TableRow key={index}>
+                                <TableCell>
+                                  {submission?.jury && submission?.jury[0].name}
+                                </TableCell>
+                                <TableCell>
+                                  {submission?.jury &&
+                                    submission?.jury[0].email}
+                                </TableCell>
+                                <TableCell>
+                                  <ul>
+                                    {submission.criteria.map(
+                                      (item: Criterion, i: number) => (
+                                        <li key={i}>
+                                          {item.criterion}: {item.score}/10
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                </TableCell>
+                                <TableCell>
+                                  {calculateAverageScore(submission.criteria)}
+                                  /50
+                                </TableCell>
+                              </TableRow>
+                            )
+                          )
+                        ) : juryDetails?.email === juryEmail && projectScore ? (
+                          <TableRow>
+                            <TableCell>{juryDetails?.name}</TableCell>
+                            <TableCell>{juryDetails?.email}</TableCell>
+                            <TableCell>
+                              <ul>
+                                {projectScore.criteria.map((item, i) => (
+                                  <li key={i}>
+                                    {item.criterion}: {item.score}/10
+                                  </li>
+                                ))}
+                              </ul>
+                            </TableCell>
+                            <TableCell>
+                              {calculateAverageScore(projectScore.criteria)}
+                              /50
+                            </TableCell>
+                          </TableRow>
+                        ) : adminProjectScore?.length === 0 &&
+                          projectScore === null ? (
+                          <Box
+                            display="flex"
+                            flexDirection="column"
+                            justifyContent="center"
+                            alignItems="center"
+                            height="20vh"
+                            sx={{
+                              bgcolor: "whitesmoke",
+                              color: "#7d7d7d",
+                              borderRadius: "0.5rem",
+                              marginTop: "1rem",
+                            }}
+                          >
+                            <HourglassDisabled style={{ fontSize: 20 }} />
+                            <Typography variant="body1">
+                              No scores submitted yet!
+                            </Typography>
+                          </Box>
+                        ) : (
+                          // adminScoreReview?.length === 0 && (
+                          <Box
+                            display="flex"
+                            flexDirection="column"
+                            justifyContent="center"
+                            alignItems="center"
+                            height="20vh"
+                            sx={{
+                              bgcolor: "whitesmoke",
+                              color: "#7d7d7d",
+                              borderRadius: "0.5rem",
+                              marginTop: "1rem",
+                            }}
+                          >
+                            <HourglassDisabled style={{ fontSize: 20 }} />
+                            <Typography variant="body1">
+                              No scores submitted yet!
+                            </Typography>
+                          </Box>
+                          // )
+                        )}
                       </TableBody>
                     </Table>
                   </TableContainer>
 
-                  {projectScore?.submissions.length === undefined && (
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      justifyContent="center"
-                      alignItems="center"
-                      height="20vh"
-                      sx={{
-                        bgcolor: "whitesmoke",
-                        color: "#7d7d7d",
-                        borderRadius: "0.5rem",
-                        marginTop: "1rem",
-                      }}
-                    >
-                      <HourglassDisabled style={{ fontSize: 20 }} />
-                      <Typography variant="body1">
-                        No scores submitted yet!
-                      </Typography>
-                    </Box>
-                  )}
+                  {/* {adminProjectScore === null && projectScore === null && (
+                    
+                  )} */}
                   {/* </>
                   )} */}
                 </Box>
@@ -780,7 +946,7 @@ const JuryDashboardPage = () => {
             open={openDialog}
             onClose={handleCloseDialog}
             fullWidth
-            maxWidth="lg"
+            maxWidth="xl"
           >
             <DialogTitle>
               {" "}
@@ -796,89 +962,61 @@ const JuryDashboardPage = () => {
               </Box>
             </DialogTitle>
             <DialogContent>
-              {/* <Table style={{ border: "1px solid black" }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      style={{ fontWeight: "bold", border: "1px solid black" }}
-                    >
-                      Project Title
-                    </TableCell>
-                    <TableCell
-                      style={{ fontWeight: "bold", border: "1px solid black" }}
-                    >
-                      Subtheme
-                    </TableCell>
-                    <TableCell
-                      style={{ fontWeight: "bold", border: "1px solid black" }}
-                    >
-                      Description
-                    </TableCell>
-                    <TableCell
-                      style={{ fontWeight: "bold", border: "1px solid black" }}
-                    >
-                      Category
-                    </TableCell>
-                    <TableCell
-                      style={{ fontWeight: "bold", border: "1px solid black" }}
-                    >
-                      Participant Info
-                    </TableCell>
-                    <TableCell
-                      style={{ fontWeight: "bold", border: "1px solid black" }}
-                    >
-                      Final Score
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {[].map((project, index) => (
-                    <TableRow key={index}>
-                      <TableCell style={{ border: "1px solid black" }}>
-                        {project?.title}
-                      </TableCell>
-                      <TableCell style={{ border: "1px solid black" }}>
-                        {project?.subTheme}
-                      </TableCell>
-                      <TableCell style={{ border: "1px solid black" }}>
-                        {project?.description}
-                      </TableCell>
-                      <TableCell style={{ border: "1px solid black" }}>
-                        {project?.participantType}
-                      </TableCell>
-                      <TableCell style={{ border: "1px solid black" }}>
-                        {project?.participantType === "Team" ? (
-                          project?.participants &&
-                          project?.participants.map((participant, index) => (
-                            <Chip
-                              key={index} // Use the index or a unique identifier for the participant as the key
-                              label={participant}
-                              size="small"
-                              variant="outlined"
-                              style={{ margin: "2px" }} // Add spacing between Chips
-                            />
-                          ))
-                        ) : (
-                          <Chip
-                            label={project.participant}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </TableCell>
-
-                      <TableCell
-                        style={{
-                          border: "1px solid black",
-                          textAlign: "center",
-                        }}
-                      >
-                        {project.finalScore}
-                      </TableCell>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Title</TableCell>
+                      <TableCell>SubTheme</TableCell>
+                      <TableCell>Description</TableCell>
+                      {/* <TableCell>Participant Type</TableCell> */}
+                      <TableCell>Participants</TableCell>
+                      <TableCell>Average Score</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table> */}
+                  </TableHead>
+                  <TableBody>
+                    {adminProjectScore?.map((projectData, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {toSentenceCase(projectData.project.title)}
+                        </TableCell>
+                        <TableCell>{projectData.project.subTheme}</TableCell>
+                        <TableCell>{projectData.project.description}</TableCell>
+                        {/* <TableCell>
+                          {projectData.project.participantType}
+                        </TableCell> */}
+                        <TableCell>
+                          {projectData.project.participants &&
+                            projectData?.project?.participants.map(
+                              (participant, index) => (
+                                <Chip
+                                  key={index}
+                                  // label={participant}
+                                  label={participant as unknown as string}
+                                  variant="outlined"
+                                  sx={{ marginRight: 0.5, marginBottom: 0.5 }}
+                                />
+                              )
+                            )}
+                        </TableCell>
+                        <TableCell>{projectData.averageScore} / 50</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            disabled={true}
+                            // onClick={() => handleSendResults(item._id)}
+                          >
+                            Send results
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </DialogContent>
             {/* Dialog Actions */}
             <DialogActions>

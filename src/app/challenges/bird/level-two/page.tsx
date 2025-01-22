@@ -215,7 +215,7 @@ function App() {
       toast.error("Failed to update score!");
     }
 
-    router.push("/challenges/maze-escape/level-three");
+    router.push("/challenges/bird/level-three");
   };
 
   return (

@@ -1,47 +1,83 @@
 "use client";
-import React, { useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import React, { useCallback, useEffect } from "react";
+import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
-
+import { useRouter } from "next/navigation";
+import useParticipantStore from "@/store/participantStore";
+import axios from "axios";
 
 const LevelFourPage: React.FC = () => {
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.origin !== 'https://games-5qkr.onrender.com') {
-                return;
-            }
+  const router = useRouter();
+  const { email } = useParticipantStore();
 
-            //failed or completed 
-            console.log('Message received from iframe:', event.data);
+  const submitScores = useCallback(async () => {
+    try {
+      const response = await axios.post(
+        `https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress`,
+        {
+          participant: email,
+          challengeId: "6748eb650a2fba264a22e700",
+          levelId: "67916472253ba1ccf5d603b6",
+          score: 10,
+          completed: true,
+        }
+      );
+      console.log("Progress updated:", response.data);
+      toast.success("Level score submitted successfully!");
+    } catch (error) {
+      console.error("Error updating progress:", error);
+      toast.error("Failed to update score!");
+    }
 
-            if(event.data === 'completed'){
-                toast.success('Level 4 completed!');
-            }else {
-                toast.error('Level 4 failed!. Please try again');
-            }
-        };
+    router.push("/challenges/bird/level-five");
+  }, [email, router]);
 
-        window.addEventListener('message', handleMessage);
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://games-5qkr.onrender.com") {
+        return;
+      }
 
-        return () => {
-            window.removeEventListener('message', handleMessage);
-        };
-    }, []);
+      //failed or completed
+      console.log("Message received from iframe:", event.data);
 
-    return (
-        <>
-            <Navbar/>
-            <div style={{ width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <iframe
-                    src="https://games-5qkr.onrender.com/bird?lang=en&level=4"
-                    style={{ width: '95%', height: '95%' }}
-                    frameBorder="0"
-                    allowFullScreen
-                    title="Level Four Game"
-                ></iframe>
-            </div>
-        </>
-    );
+      if (event.data === "completed") {
+        submitScores();
+        toast.success("Level 4 completed!");
+      } else {
+        toast.error("Level 4 failed!. Please try again");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  return (
+    <>
+      <Navbar />
+      <div
+        style={{
+          width: "100%",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <iframe
+          src="https://games-5qkr.onrender.com/bird?lang=en&level=4"
+          style={{ width: "95%", height: "95%" }}
+          frameBorder="0"
+          allowFullScreen
+          title="Level Four Game"
+        ></iframe>
+      </div>
+    </>
+  );
 };
 
 export default LevelFourPage;

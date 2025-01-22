@@ -42,7 +42,7 @@ const AdminNavbar = () => {
     localStorage.clear();
 
     // Redirect to the index route
-    router.push("/");
+    router.push("/admin/login/");
   };
 
   const handleNavigation = (path: string) => {

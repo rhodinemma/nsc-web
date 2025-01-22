@@ -149,7 +149,7 @@ const JuryDashboardPage = () => {
     const fetchAssessors = async () => {
       try {
         const response = await axios.get<{ status: string; data: Assessor[] }>(
-          "http://localhost:3002/api/v1/identities"
+          "https://progressbot-vzd5.onrender.com/api/v1/identities"
         );
         setAssessors(response.data.data);
       } catch (error) {
@@ -171,7 +171,7 @@ const JuryDashboardPage = () => {
 
     try {
       await axios.post(
-        "http://localhost:3002/api/v1/identities/assign-project",
+        "https://progressbot-vzd5.onrender.com/api/v1/identities/assign-project",
         data,
         {
           headers: { "Content-Type": "application/json" },
@@ -194,7 +194,7 @@ const JuryDashboardPage = () => {
 
     try {
       await axios.post(
-        "http://localhost:3002/api/v1/identities/remove-project",
+        "https://progressbot-vzd5.onrender.com/api/v1/identities/remove-project",
         data,
         {
           headers: { "Content-Type": "application/json" },
@@ -214,7 +214,7 @@ const JuryDashboardPage = () => {
     const fetchAllProjects = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3002/api/v1/identities/${juryId}/projects?role=${juryRole}`
+          `https://progressbot-vzd5.onrender.com/api/v1/identities/${juryId}/projects?role=${juryRole}`
         );
 
         setProjects(response.data.data.projects);
@@ -233,7 +233,7 @@ const JuryDashboardPage = () => {
     async (projectId: string): Promise<boolean> => {
       try {
         const response = await axios.get(
-          `http://localhost:3002/api/v1/identities/check-submission/${juryId}/${projectId}`
+          `https://progressbot-vzd5.onrender.com/api/v1/identities/check-submission/${juryId}/${projectId}`
         );
         return response.data.hasSubmitted; // Assuming the API returns `true` or `false`
       } catch (error) {
@@ -262,7 +262,7 @@ const JuryDashboardPage = () => {
   const getAllProjectScores = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3002/api/v1/identities/project-scores`
+        `https://progressbot-vzd5.onrender.com/api/v1/identities/project-scores`
       );
       setAdminProjectScore(response.data.data);
       console.log("Project scores fetched:", response.data.data);
@@ -342,7 +342,7 @@ const JuryDashboardPage = () => {
     async (projectId: string) => {
       try {
         const response = await axios.get(
-          `http://localhost:3002/api/v1/identities/projects/${projectId}`
+          `https://progressbot-vzd5.onrender.com/api/v1/identities/projects/${projectId}`
         );
         if (juryRole === "Admin") {
           setAdminScoreReview(response.data.data.submissions);
@@ -372,7 +372,9 @@ const JuryDashboardPage = () => {
       const response = await axios.get<{
         status: string;
         data: AssignedAssessor[];
-      }>(`http://localhost:3002/api/v1/identities/check-jury/${projectId}`);
+      }>(
+        `https://progressbot-vzd5.onrender.com/api/v1/identities/check-jury/${projectId}`
+      );
       setAssignedAssessors(response.data.data);
     } catch (error) {
       console.error("Error fetching assigned assessors:", error);
@@ -416,7 +418,7 @@ const JuryDashboardPage = () => {
   const handleDownload = async (fileId: string, fileName: string) => {
     try {
       const response = await fetch(
-        `http://localhost:3002/api/v1/uploads/view/${fileId}`
+        `https://progressbot-vzd5.onrender.com/api/v1/uploads/view/${fileId}`
       );
       if (!response.ok) {
         toast.error("Issue detected downloading project file!");

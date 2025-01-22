@@ -70,7 +70,7 @@ function AssessProjectPage() {
 
     try {
       const response = await axios.post(
-        `http://localhost:3002/api/v1/identities/mark-project`,
+        `https://progressbot-vzd5.onrender.com/api/v1/identities/mark-project`,
         data,
         {
           headers: { "Content-Type": "application/json" },

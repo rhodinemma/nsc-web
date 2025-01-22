@@ -48,7 +48,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3002/api/v1/identities/login",
+        "https://progressbot-vzd5.onrender.com/api/v1/identities/login",
         {
           email,
           password,
@@ -86,7 +86,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3002/api/v1/identities",
+        "https://progressbot-vzd5.onrender.com/api/v1/identities",
         data,
         {
           headers: { "Content-Type": "application/json" },

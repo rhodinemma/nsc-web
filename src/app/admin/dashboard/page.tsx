@@ -628,6 +628,31 @@ const JuryDashboardPage = () => {
                 </Grid>
               ))
             )}
+
+            {!loading && projects.length === 0 && (
+              <Container disableGutters>
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  height="50vh"
+                  sx={{
+                    bgcolor: "whitesmoke",
+                    color: "#7d7d7d",
+                    borderRadius: "1rem",
+                    marginTop: "2rem",
+                    marginBottom: "2rem",
+                    marginLeft: "1rem",
+                  }}
+                >
+                  <HourglassDisabled style={{ fontSize: 50 }} />
+                  <Typography variant="h5">
+                    No projects assigned yet!
+                  </Typography>
+                </Box>
+              </Container>
+            )}
           </Grid>
 
           {/* Review project dialog */}

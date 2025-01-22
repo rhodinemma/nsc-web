@@ -159,8 +159,8 @@ function AssessProjectPage() {
           </Typography>
           <ol>
             <li>
-              Upload the project file. By clicking on the -File- option in the
-              scratch editor menu bar
+              Upload the project file you downloaded from the dashboard. By
+              clicking on the -File- option in the scratch editor menu bar
             </li>
             {/* <li>Review the provided screenshots below for reference.</li> */}
             <li>Understand the scoring criteria detailed below:</li>

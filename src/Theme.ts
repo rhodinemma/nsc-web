@@ -17,15 +17,11 @@ export const PrimaryTheme = createTheme({
     action: {
       active: "#590925",
 
-      focus: "#590925",
-
-      selected: "#590925",
-
+      focus: "#590925"
     }
   },
   typography: {
-    fontFamily: 'Teachers, sans-serif',
-    fontSize: 16,
+    fontFamily: 'Montserrat, sans-serif',
   },
   components: {
     MuiButton: {

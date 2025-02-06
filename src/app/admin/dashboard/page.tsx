@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import AdminNavbar from "@/components/AdminNav";
 import {
@@ -7,6 +8,7 @@ import {
   FileOpen,
   Grid4x4,
   HourglassDisabled,
+  Message,
 } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -55,6 +57,12 @@ interface AssignedAssessor {
 
 interface Participant {
   name: string;
+}
+
+interface ParticipantList {
+  id: number;
+  name: string;
+  email: string;
 }
 
 interface ProjectData {
@@ -108,6 +116,18 @@ interface AdminProjectData {
   project: ProjectData;
 }
 
+interface Challenge {
+  challengeId: string;
+  averageScore: string; // Stored as "X / Y"
+  completionPercentage: number;
+}
+
+interface ChallengeScore {
+  name: string;
+  email: string;
+  challenges: Challenge[];
+}
+
 const JuryDashboardPage = () => {
   const router = useRouter();
 
@@ -132,6 +152,16 @@ const JuryDashboardPage = () => {
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
+  const [resultsProject, setResultsProject] = useState<AdminProjectData | null>(
+    null
+  );
+  const [message, setMessage] = useState("");
+  const [scoreValue, setScoreValue] = useState(0);
+  const [participantEmails, setParticipantEmails] = useState<ParticipantList[]>(
+    []
+  );
+  const [challengeScores, setChallengeScores] = useState<ChallengeScore[]>([]);
+  const [openSendResultsDialog, setOpenSendResultsDialog] = useState(false);
   const [checkSubmission, setCheckSubmission] = useState<
     Record<string, boolean>
   >({});
@@ -143,6 +173,25 @@ const JuryDashboardPage = () => {
   const [adminProjectScore, setAdminProjectScore] = useState<
     AdminProjectData[] | null
   >(null);
+
+  // const [score1, setScore1] = useState<number | "">("");
+  // const [score2, setScore2] = useState<number | "">("");
+  // const [overallScore, setOverallScore] = useState<number | null>(null);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // const calculateOverallScore = (score1: any, score2: any) => {
+  //   // if (score1 === "" || score2 === "") return;
+
+  //   // Convert scores to percentage if they are not out of 100
+  //   const normalizedScore1 = Number(score1) * 100;
+  //   const normalizedScore2 = Number(score2) * 100;
+
+  //   // Compute overall weighted score
+  //   const overall = normalizedScore1 * 0.7 + normalizedScore2 * 0.3;
+  //   setOverallScore(overall);
+  // };
+
+  // console.log("overall score", overallScore);
 
   // Fetch all assessors
   useEffect(() => {
@@ -159,6 +208,105 @@ const JuryDashboardPage = () => {
 
     fetchAssessors();
   }, []);
+
+  const [availableParticipants, setAvailableParticipants] = useState<
+    ParticipantList[]
+  >([]);
+
+  // useEffect(() => {
+  //   const fetchParticipants = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         "https://api.nationalscratchcompetition.org/api/users?page=1&paginator=100",
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //           },
+  //         }
+  //       );
+
+  //       const participants = response.data.data.data.map(
+  //         (user: ParticipantList) => ({
+  //           id: user.id,
+  //           name: user.name,
+  //           email: user.email,
+  //         })
+  //       );
+  //       setAvailableParticipants(participants);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error fetching participants:", error);
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchParticipants();
+  // }, []);
+
+  const fetchParticipants = useCallback(async () => {
+    try {
+      const authResponse = await axios.post(
+        "https://api.nationalscratchcompetition.org/api/login",
+        {
+          username: "rhodinemma10@gmail.com",
+          password: "MpJfWC2P06la",
+        }
+      );
+
+      const response = await axios.get(
+        "https://api.nationalscratchcompetition.org/api/users?page=1&paginator=100",
+        {
+          headers: {
+            Authorization: `Bearer ${authResponse.data?.access_token}`,
+          },
+        }
+      );
+
+      const participants = response.data.data.data.map(
+        (user: ParticipantList) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        })
+      );
+      setAvailableParticipants(participants);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+    }
+  }, []);
+
+  const fetchParticipantChallengeScores = useCallback(
+    async (participants: any) => {
+      try {
+        let participantList: string[] = [];
+
+        if (Array.isArray(participants)) {
+          participantList = participants;
+        } else if (typeof participants === "string") {
+          const foundParticipant = availableParticipants.filter(
+            (participant) => participant.email === participants
+          );
+
+          participantList.push(foundParticipant[0].email);
+        } else {
+          console.warn("Unexpected participants type:", participants);
+        }
+
+        const response = await axios.post(
+          "https://progressbot-vzd5.onrender.com/api/v1/participant/progress",
+          {
+            names: participantList,
+          }
+        );
+
+        console.log(response.data);
+        setChallengeScores(response.data);
+      } catch (error) {
+        console.error("Error fetching participant challenge scores:", error);
+      }
+    },
+    [availableParticipants]
+  );
 
   // Assign an assessor to the project
   const handleAssign = async (projectId: string) => {
@@ -395,6 +543,25 @@ const JuryDashboardPage = () => {
     setOpenReviewDialog(true);
   };
 
+  const handleSendResults = (project: AdminProjectData) => {
+    fetchParticipants();
+    fetchParticipantChallengeScores(
+      project?.project?.participants &&
+        project?.project?.participants?.length > 0
+        ? project?.project?.participants
+        : project?.project?.participant
+    );
+    setResultsProject(project);
+    setScoreValue(project.averageScore);
+    setOpenSendResultsDialog(true);
+  };
+
+  const handleCloseSendResultsDialog = () => {
+    setResultsProject(null);
+    setChallengeScores([]);
+    setOpenSendResultsDialog(false);
+  };
+
   const handleCloseReviewProject = () => {
     setReviewProject(null);
     setAdminProjectScore([]);
@@ -455,6 +622,142 @@ const JuryDashboardPage = () => {
     const total = criteria.reduce((sum, item) => sum + item.score, 0);
     return total;
   };
+
+  const truncateText = (
+    text: string,
+    maxLines: number,
+    charsPerLine: number = 50
+  ) => {
+    if (!text) return "";
+
+    const maxLength = maxLines * charsPerLine; // Approximate max characters
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  };
+
+  const handleSubmitResults = async () => {
+    console.log("parts", participantEmails);
+    console.log("message", message);
+    console.log("score", scoreValue);
+
+    try {
+      await axios.post(
+        "https://progressbot-vzd5.onrender.com/api/v1/identities/send-results",
+        {
+          participants: participantEmails,
+          score: scoreValue,
+          message: message,
+        }
+      );
+
+      toast.success("Results sent successfully!");
+
+      setOpenSendResultsDialog(false);
+      setMessage("");
+    } catch (err) {
+      toast.error("Failed to login!");
+      console.error("Error during login:", err);
+    }
+  };
+
+  // const getProjectScore = (projectScore: any, getTotal?: boolean) => {
+  //   console.log("lolest", projectScore?.averageScore);
+  //   const averageScore = Math.round(projectScore?.averageScore ?? 0);
+  //   const weightedScore = (averageScore / 50) * 100;
+
+  //   if (getTotal) return weightedScore;
+
+  //   // return weightedScore.toFixed(0);
+  //   return Number(weightedScore.toFixed(0));
+  // };
+
+  // const getChallengeScore = (challengeScore: any, getTotal?: boolean) => {
+  //   // Ensure challengeScore is a valid array
+  //   if (!Array.isArray(challengeScore) || challengeScore.length === 0) {
+  //     return 0; // Return a default value
+  //   }
+
+  //   // Ensure averageScore exists and is in the expected format
+  //   if (!challengeScore[0]?.averageScore?.includes(" / ")) {
+  //     toast.error("Invalid averageScore format!");
+  //     return 0;
+  //   }
+
+  //   // Extract numerator and denominator safely
+  //   const [numerator, denominator] = challengeScore[0].averageScore
+  //     .split(" / ")
+  //     .map(Number);
+
+  //   if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+  //     toast.error("Invalid score values!");
+  //     return 0;
+  //   }
+
+  //   if (getTotal) return (numerator / (denominator * 10)) * 100;
+
+  //   const result = (numerator / (denominator * 10)) * 100;
+  //   return result;
+  // };
+
+  // const getTotalScore = (projectScore: any, challengeScore: any) => {
+  //   const project = Number(getProjectScore(projectScore)) || 0;
+
+  //   const challenge = getChallengeScore(challengeScore, true) || 0;
+
+  //   console.log(`project: ${project * 0.7} + challenge: ${challenge * 0.3}`);
+
+  //   return (project * 0.7 + challenge * 0.3).toFixed(0);
+  // };
+
+  const getProjectScore = useCallback(
+    (projectScore: any, getTotal?: boolean) => {
+      console.log("lolest", projectScore?.averageScore);
+      const averageScore = Math.round(projectScore?.averageScore ?? 0);
+      const weightedScore = (averageScore / 50) * 100;
+
+      if (getTotal) return weightedScore;
+
+      return Number(weightedScore.toFixed(0));
+    },
+    []
+  );
+
+  const getChallengeScore = useCallback(
+    (challengeScore: any, getTotal?: boolean) => {
+      if (!Array.isArray(challengeScore) || challengeScore.length === 0) {
+        return 0;
+      }
+
+      if (!challengeScore[0]?.averageScore?.includes(" / ")) {
+        toast.error("Invalid averageScore format!");
+        return 0;
+      }
+
+      const [numerator, denominator] = challengeScore[0].averageScore
+        .split(" / ")
+        .map(Number);
+
+      if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+        toast.error("Invalid score values!");
+        return 0;
+      }
+
+      const result = (numerator / (denominator * 10)) * 100;
+      return getTotal ? result : result;
+    },
+    []
+  );
+
+  const getTotalScore = useCallback(
+    (projectScore: any, challengeScore: any) => {
+      const project = Number(getProjectScore(projectScore)) || 0;
+      const challenge = getChallengeScore(challengeScore, true) || 0;
+
+      console.log(`project: ${project * 0.7} + challenge: ${challenge * 0.3}`);
+
+      return (project * 0.7 + challenge * 0.3).toFixed(0);
+    },
+    [getProjectScore, getChallengeScore]
+  );
 
   return (
     <>
@@ -545,7 +848,7 @@ const JuryDashboardPage = () => {
                         color: "#fff",
                         padding: "4px 8px",
                         borderRadius: "16px",
-                        fontSize: "0.8rem",
+                        fontSize: "0.7rem",
                       }}
                     >
                       {project.subTheme}
@@ -566,16 +869,16 @@ const JuryDashboardPage = () => {
                       color="textSecondary"
                       sx={{
                         display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        WebkitLineClamp: 2,
+                        // WebkitBoxOrient: "vertical",
+                        // overflow: "hidden",
+                        WebkitLineClamp: 1,
                         textOverflow: "ellipsis",
                         textAlign: "left",
                         width: "100%",
                         marginBottom: 4, // Space for buttons
                       }}
                     >
-                      {project.description}
+                      {truncateText(project.description, 1)}
                     </Typography>
 
                     {/* Buttons */}
@@ -976,13 +1279,15 @@ const JuryDashboardPage = () => {
             maxWidth="xl"
           >
             <DialogTitle>
-              {" "}
               <Box
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
               >
-                <Typography variant="h6">All projects score sheet</Typography>
+                <Typography variant="h6">
+                  NSC final score sheet ({adminProjectScore?.length} marked
+                  projects)
+                </Typography>
                 <IconButton onClick={handleCloseDialog} size="small">
                   <Close />
                 </IconButton>
@@ -996,9 +1301,8 @@ const JuryDashboardPage = () => {
                       <TableCell>Title</TableCell>
                       <TableCell>SubTheme</TableCell>
                       <TableCell>Description</TableCell>
-                      {/* <TableCell>Participant Type</TableCell> */}
                       <TableCell>Participants</TableCell>
-                      <TableCell>Average Score</TableCell>
+                      {/* <TableCell>Average Score</TableCell> */}
                       <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -1009,34 +1313,47 @@ const JuryDashboardPage = () => {
                           {toSentenceCase(projectData.project.title)}
                         </TableCell>
                         <TableCell>{projectData.project.subTheme}</TableCell>
-                        <TableCell>{projectData.project.description}</TableCell>
-                        {/* <TableCell>
-                          {projectData.project.participantType}
-                        </TableCell> */}
+                        <TableCell>
+                          {truncateText(projectData.project.description, 3)}
+                        </TableCell>
                         <TableCell>
                           {projectData.project.participants &&
                             projectData?.project?.participants.map(
                               (participant, index) => (
                                 <Chip
                                   key={index}
-                                  // label={participant}
                                   label={participant as unknown as string}
                                   variant="outlined"
                                   sx={{ marginRight: 0.5, marginBottom: 0.5 }}
                                 />
                               )
                             )}
+
+                          <Chip
+                            // key={index}
+                            label={
+                              `Submitted by: ${projectData?.project?.participant}` as unknown as string
+                            }
+                            variant="outlined"
+                            sx={{
+                              marginRight: 0.5,
+                              marginBottom: 0.5,
+                              borderColor: "green",
+                              color: "green",
+                            }}
+                          />
                         </TableCell>
-                        <TableCell>{projectData.averageScore} / 50</TableCell>
+                        {/* <TableCell>
+                          {Math.round(projectData.averageScore)} / 50
+                        </TableCell> */}
                         <TableCell>
                           <Button
                             variant="contained"
                             color="primary"
                             size="small"
-                            disabled={true}
-                            // onClick={() => handleSendResults(item._id)}
+                            onClick={() => handleSendResults(projectData)}
                           >
-                            Send results
+                            View results
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -1051,6 +1368,227 @@ const JuryDashboardPage = () => {
                 Close
               </Button>
             </DialogActions>
+          </Dialog>
+
+          {/* Send results dialog */}
+          <Dialog
+            open={openSendResultsDialog}
+            onClose={handleCloseSendResultsDialog}
+            fullWidth
+            maxWidth="md"
+          >
+            <DialogTitle>
+              {" "}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography variant="h6">
+                  {resultsProject?.project.title}
+                </Typography>
+                <IconButton onClick={handleCloseSendResultsDialog} size="small">
+                  <Close />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              <Typography variant="body1">
+                SubTheme: {resultsProject?.project.subTheme}
+              </Typography>
+
+              <Box mt={2} mb={3}>
+                <Typography variant="body2">
+                  {resultsProject?.project.description}
+                </Typography>
+              </Box>
+              {/* <Box>
+                <Typography variant="h2" align="center" gutterBottom>
+                  {Math.round(resultsProject?.averageScore ?? 0)} / 50
+                </Typography>
+                <Typography variant="h5" align="center" gutterBottom>
+                  ({" "}
+                  {Math.round(((resultsProject?.averageScore ?? 0) / 50) * 100)}
+                  %)
+                </Typography>
+              </Box> */}
+
+              {/* Display Participants in Chips */}
+              <Box mt={2} mb={3}>
+                <Typography variant="h6" gutterBottom>
+                  Participants:
+                </Typography>
+                <Grid container spacing={1}>
+                  {resultsProject?.project?.participants &&
+                    resultsProject?.project?.participants.map(
+                      (participant, index) => (
+                        <Chip
+                          key={index}
+                          label={participant as unknown as string}
+                          variant="outlined"
+                          sx={{ marginRight: 0.5, marginBottom: 0.5 }}
+                        />
+                      )
+                    )}
+
+                  <Chip
+                    // key={index}
+                    label={
+                      `Submitted by: ${resultsProject?.project?.participant}` as unknown as string
+                    }
+                    variant="outlined"
+                    sx={{
+                      marginRight: 0.5,
+                      marginBottom: 0.5,
+                      borderColor: "green",
+                      color: "green",
+                    }}
+                  />
+                </Grid>
+              </Box>
+
+              <Typography variant="h6" gutterBottom>
+                Indiviudal score breakdown:
+              </Typography>
+
+              <TableContainer sx={{ paddingBottom: "1rem" }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Project</TableCell>
+                      <TableCell>Challenges</TableCell>
+                      <TableCell>Overall Score</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {challengeScores && challengeScores.length > 0 ? (
+                      challengeScores?.map(
+                        (challengeScore: ChallengeScore, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{challengeScore.name}</TableCell>
+                            <TableCell>
+                              {getProjectScore(resultsProject)}%
+                            </TableCell>
+                            <TableCell>
+                              {getChallengeScore(
+                                challengeScore.challenges.filter(
+                                  (challenge) =>
+                                    challenge.challengeId ===
+                                    "672d1513bc573ddbaf73b560"
+                                )
+                              )}
+                              %
+                            </TableCell>
+
+                            <TableCell>
+                              {getTotalScore(
+                                resultsProject,
+                                challengeScore.challenges.filter(
+                                  (challenge) =>
+                                    challenge.challengeId ===
+                                    "672d1513bc573ddbaf73b560"
+                                )
+                              )}{" "}
+                              %
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )
+                    ) : resultsProject?.project?.participants &&
+                      resultsProject?.project?.participants.length > 0 ? (
+                      resultsProject?.project?.participants.map(
+                        (participant, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              {participant as unknown as string}
+                            </TableCell>
+                            <TableCell>
+                              {(getProjectScore(resultsProject) * 0.7).toFixed(
+                                0
+                              )}
+                              %
+                            </TableCell>
+                            <TableCell>0</TableCell>
+                            <TableCell>
+                              {(getProjectScore(resultsProject) * 0.7).toFixed(
+                                0
+                              )}
+                              %
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )
+                    ) : (
+                      <TableRow>
+                        <TableCell>
+                          {
+                            resultsProject?.project
+                              ?.participant as unknown as string
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {(getProjectScore(resultsProject) * 0.7).toFixed(0)}%
+                        </TableCell>
+                        <TableCell>0</TableCell>
+                        <TableCell>
+                          {(getProjectScore(resultsProject) * 0.7).toFixed(0)}%
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Typography variant="body1">
+                Send results to the following
+              </Typography>
+              <Autocomplete
+                multiple
+                options={availableParticipants}
+                getOptionLabel={(option: ParticipantList) => option.email}
+                onChange={(e, value) => {
+                  console.log("va", value);
+                  const emails = value.map((participant) => participant.email);
+                  console.log("emails", emails);
+                  setParticipantEmails(value);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Search Participants"
+                    margin="dense"
+                  />
+                )}
+              />
+              {/* 
+              <Box mt={3}>
+                <Typography variant="body1" gutterBottom>
+                  Comment to participant(s):
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  placeholder="Type your message here..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </Box> */}
+
+              <Box mt={2} textAlign="right">
+                <Button
+                  startIcon={<Message />}
+                  variant="contained"
+                  color="primary"
+                  disabled={true}
+                  onClick={handleSubmitResults}
+                >
+                  Send results
+                </Button>
+              </Box>
+            </DialogContent>
           </Dialog>
         </Container>
       </Box>

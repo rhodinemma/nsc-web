@@ -155,11 +155,7 @@ const JuryDashboardPage = () => {
   const [resultsProject, setResultsProject] = useState<AdminProjectData | null>(
     null
   );
-  const [message, setMessage] = useState("");
-  const [scoreValue, setScoreValue] = useState(0);
-  const [participantEmails, setParticipantEmails] = useState<ParticipantList[]>(
-    []
-  );
+
   const [challengeScores, setChallengeScores] = useState<ChallengeScore[]>([]);
   const [openSendResultsDialog, setOpenSendResultsDialog] = useState(false);
   const [checkSubmission, setCheckSubmission] = useState<
@@ -173,6 +169,11 @@ const JuryDashboardPage = () => {
   const [adminProjectScore, setAdminProjectScore] = useState<
     AdminProjectData[] | null
   >(null);
+
+  // handle submiting scores for participants
+  const [selectedParticipants, setSelectedParticipants] = useState<
+    { name: string; email: string; score: string }[]
+  >([]);
 
   // const [score1, setScore1] = useState<number | "">("");
   // const [score2, setScore2] = useState<number | "">("");
@@ -552,13 +553,13 @@ const JuryDashboardPage = () => {
         : project?.project?.participant
     );
     setResultsProject(project);
-    setScoreValue(project.averageScore);
     setOpenSendResultsDialog(true);
   };
 
   const handleCloseSendResultsDialog = () => {
     setResultsProject(null);
     setChallengeScores([]);
+    setSelectedParticipants([]);
     setOpenSendResultsDialog(false);
   };
 
@@ -635,24 +636,20 @@ const JuryDashboardPage = () => {
   };
 
   const handleSubmitResults = async () => {
-    console.log("parts", participantEmails);
-    console.log("message", message);
-    console.log("score", scoreValue);
+    if (selectedParticipants.length === 0) {
+      return toast.warning("Please select one or more participants!");
+    }
 
     try {
       await axios.post(
         "https://progressbot-vzd5.onrender.com/api/v1/identities/send-results",
-        {
-          participants: participantEmails,
-          score: scoreValue,
-          message: message,
-        }
+        selectedParticipants
       );
 
       toast.success("Results sent successfully!");
 
       setOpenSendResultsDialog(false);
-      setMessage("");
+      setSelectedParticipants([]);
     } catch (err) {
       toast.error("Failed to login!");
       console.error("Error during login:", err);
@@ -758,6 +755,8 @@ const JuryDashboardPage = () => {
     },
     [getProjectScore, getChallengeScore]
   );
+
+  console.log("to submit", selectedParticipants);
 
   return (
     <>
@@ -1458,7 +1457,7 @@ const JuryDashboardPage = () => {
                       <TableCell>Name</TableCell>
                       <TableCell>Project</TableCell>
                       <TableCell>Challenges</TableCell>
-                      <TableCell>Overall Score</TableCell>
+                      <TableCell>Overall</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1467,6 +1466,7 @@ const JuryDashboardPage = () => {
                         (challengeScore: ChallengeScore, index) => (
                           <TableRow key={index}>
                             <TableCell>{challengeScore.name}</TableCell>
+
                             <TableCell>
                               {getProjectScore(resultsProject)}%
                             </TableCell>
@@ -1548,10 +1548,42 @@ const JuryDashboardPage = () => {
                 options={availableParticipants}
                 getOptionLabel={(option: ParticipantList) => option.email}
                 onChange={(e, value) => {
-                  console.log("va", value);
                   const emails = value.map((participant) => participant.email);
-                  console.log("emails", emails);
-                  setParticipantEmails(value);
+
+                  const updatedParticipants = emails
+                    .map((email) => {
+                      const matchingParticipant = challengeScores.find(
+                        (p) => p.email === email
+                      );
+
+                      console.log("match", matchingParticipant);
+
+                      if (!matchingParticipant) return null;
+
+                      return {
+                        name: matchingParticipant.name,
+                        email: matchingParticipant.email,
+                        score: `${getTotalScore(
+                          resultsProject,
+                          matchingParticipant.challenges.filter(
+                            (challenge) =>
+                              challenge.challengeId ===
+                              "672d1513bc573ddbaf73b560"
+                          )
+                        )}%`,
+                      };
+                    })
+                    .filter(
+                      (
+                        p
+                      ): p is {
+                        name: string;
+                        email: string;
+                        score: string;
+                      } => p !== null
+                    ); // Type-safe filtering
+
+                  setSelectedParticipants(updatedParticipants);
                 }}
                 renderInput={(params) => (
                   <TextField
@@ -1582,7 +1614,6 @@ const JuryDashboardPage = () => {
                   startIcon={<Message />}
                   variant="contained"
                   color="primary"
-                  disabled={true}
                   onClick={handleSubmitResults}
                 >
                   Send results

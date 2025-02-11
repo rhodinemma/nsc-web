@@ -285,7 +285,7 @@ const Challenges = () => {
         setIsLoading(true);
 
         const response = await fetch(
-          `http://localhost:3002/api/v1/progress/participant/${email}`
+          `https://progressbot-vzd5.onrender.com/api/v1/progress/participant/${email}`
         );
         const data = await response.json();
 
@@ -384,101 +384,132 @@ const Challenges = () => {
       <Navbar />
 
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
+        style={{
+          position: "absolute",
+          width: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.55)",
+          zIndex: 1,
+          height: "140vh",
+        }}
+      />
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #FF6F61, #FFD54F)",
+          color: "white",
+          padding: 4,
+          textAlign: "center",
+          backgroundImage: `url('/puzzle.svg')`,
+          backgroundRepeat: "repeat",
+          backgroundPosition: "cover",
+          height: "100vh",
+        }}
       >
-        <Typography
-          variant="h4"
-          className="title"
-          color="secondary"
-          sx={{ margin: "2rem 0 2rem 0" }}
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
         >
-          Code Challenges
-        </Typography>
+          <Typography
+            variant="h4"
+            className="title"
+            color="secondary"
+            sx={{
+              margin: "2rem 0 2rem 0",
+              color: "white",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            Code Challenges
+          </Typography>
 
-        <Card
-          sx={{
-            width: "80%",
-            maxWidth: 600,
-            backgroundColor: "#f5f5f5",
-            padding: 3,
-            borderRadius: 2,
-          }}
-        >
-          <CardContent>
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              width="100%"
-            >
-              <Typography variant="h6" color="secondary">
-                Your Progress
-              </Typography>
-              <Divider sx={{ width: "90%", mb: 2 }} />
-            </Box>
+          <Card
+            sx={{
+              width: "80%",
+              maxWidth: 600,
+              backgroundColor: "#f5f5f5",
+              padding: 3,
+              borderRadius: 2,
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            <CardContent>
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                width="100%"
+              >
+                <Typography variant="h6" color="secondary">
+                  Your Progress
+                </Typography>
+                <Divider sx={{ width: "90%", mb: 2 }} />
+              </Box>
 
-            <Box display="flex" flexDirection="column" width="100%">
-              <List>
-                {games.map((game, index) => (
-                  <React.Fragment key={index}>
-                    <ListItemButton
-                      disabled={!game.isAuthorizedtoTake}
-                      onClick={gameactionMapper(game.id)}
-                    >
-                      <ListItemIcon>
-                        <CircularProgressWithLabel
-                          value={computeOverallScore(game.id)}
-                        />
-                      </ListItemIcon>
-                      <ListItemText primary={game.name} />
-                      {getgameactionmapper(game.id) ? (
-                        <ExpandLess />
-                      ) : (
-                        <ExpandMore />
-                      )}
-                    </ListItemButton>
-                    <Collapse
-                      in={getgameactionmapper(game.id)}
-                      timeout="auto"
-                      unmountOnExit
-                    >
-                      <List component="div" disablePadding>
-                        {game.challenges.map((challenge, idx) => (
-                          <ListItemButton
-                            key={idx}
-                            sx={{ pl: 4 }}
-                            disabled={challenge.isCompleted}
-                            onClick={() => handleNavigation(challenge.path)}
-                          >
-                            <ListItemIcon>
-                              <ExtensionIcon
-                                color={
-                                  challenge.isCompleted ? "success" : "primary"
+              <Box display="flex" flexDirection="column" width="100%">
+                <List>
+                  {games.map((game, index) => (
+                    <React.Fragment key={index}>
+                      <ListItemButton
+                        disabled={!game.isAuthorizedtoTake}
+                        onClick={gameactionMapper(game.id)}
+                      >
+                        <ListItemIcon>
+                          <CircularProgressWithLabel
+                            value={computeOverallScore(game.id)}
+                          />
+                        </ListItemIcon>
+                        <ListItemText primary={game.name} />
+                        {getgameactionmapper(game.id) ? (
+                          <ExpandLess />
+                        ) : (
+                          <ExpandMore />
+                        )}
+                      </ListItemButton>
+                      <Collapse
+                        in={getgameactionmapper(game.id)}
+                        timeout="auto"
+                        unmountOnExit
+                      >
+                        <List component="div" disablePadding>
+                          {game.challenges.map((challenge, idx) => (
+                            <ListItemButton
+                              key={idx}
+                              sx={{ pl: 4 }}
+                              disabled={challenge.isCompleted}
+                              onClick={() => handleNavigation(challenge.path)}
+                            >
+                              <ListItemIcon>
+                                <ExtensionIcon
+                                  color={
+                                    challenge.isCompleted
+                                      ? "success"
+                                      : "primary"
+                                  }
+                                />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={challenge.name}
+                                secondary={
+                                  challenge.isCompleted ? "Completed" : null
                                 }
                               />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={challenge.name}
-                              secondary={
-                                challenge.isCompleted ? "Completed" : null
-                              }
-                            />
-                            <ListItemIcon>
-                              <ArrowForwardIosIcon fontSize="small" />
-                            </ListItemIcon>
-                          </ListItemButton>
-                        ))}
-                      </List>
-                    </Collapse>
-                  </React.Fragment>
-                ))}
-              </List>
-            </Box>
-          </CardContent>
-        </Card>
+                              <ListItemIcon>
+                                <ArrowForwardIosIcon fontSize="small" />
+                              </ListItemIcon>
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Collapse>
+                    </React.Fragment>
+                  ))}
+                </List>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
       </Box>
     </>
   );

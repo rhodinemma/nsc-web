@@ -64,7 +64,7 @@ const BuildProjectPage = () => {
   const [formData, setFormData] = useState<FormData>({
     title: "",
     subTheme: "",
-    participantType: "",
+    participantType: "Individual",
     participants: [],
     description: "",
     file: null,
@@ -194,9 +194,9 @@ const BuildProjectPage = () => {
   const handleConfirmation = async () => {
     setConfirmationDialog(false);
 
-    const transformedParticipants = formData.participants.map(
-      (participant) => participant.name
-    );
+    // const transformedParticipants = formData.participants.map(
+    //   (participant) => participant.name
+    // );
 
     try {
       const response = await axios.post(
@@ -206,7 +206,6 @@ const BuildProjectPage = () => {
           subTheme: formData.subTheme,
           participantType: formData.participantType,
           participant: email,
-          participants: transformedParticipants,
           description: formData.description,
           file: formData.file,
         }
@@ -499,7 +498,7 @@ const BuildProjectPage = () => {
               />
 
               {/* Participant Type */}
-              <FormControl fullWidth margin="dense">
+              {/* <FormControl fullWidth margin="dense">
                 <InputLabel>Participant type</InputLabel>
                 <Select
                   label="Participant type"
@@ -511,7 +510,7 @@ const BuildProjectPage = () => {
                   <MenuItem value="Individual">Individual</MenuItem>
                   <MenuItem value="Team">Team</MenuItem>
                 </Select>
-              </FormControl>
+              </FormControl> */}
 
               {/* Team Participant Selection */}
               {formData.participantType === "Team" && (

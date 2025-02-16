@@ -18,6 +18,7 @@ import {
   TextField,
   Typography,
   CircularProgress,
+  DialogContentText,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -27,6 +28,8 @@ import { CheckCircle } from "@mui/icons-material";
 
 const Login = () => {
   const { setUsername, setUserEmail, setToken } = useParticipantStore();
+
+  const [openParticipantStatus, setOpenParticipantStatus] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -134,6 +137,10 @@ const Login = () => {
     setOpenModal(false);
   };
 
+  const handleCloseParticipantStatus = () => {
+    setOpenParticipantStatus(false);
+  };
+
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,16 +155,26 @@ const Login = () => {
         }
       );
 
-      toast.success("Login successful!");
-
       setToken(response.data?.access_token);
       setUsername(response.data.user?.name);
       setUserEmail(response.data.user?.email);
 
       localStorage.setItem("token", response.data?.access_token);
 
-      // Redirect to the dashboard
-      router.push("/dashboard");
+      // Check participant status
+      const participantResponse = await axios.get(
+        `https://progressbot-vzd5.onrender.com/api/v1/participant/check-participant/${email}`
+      );
+
+      if (!participantResponse.data?.data?.[0]) {
+        // If data array is empty, show dialog
+        setOpenParticipantStatus(true);
+        toast.info("Please check your participation status");
+      } else {
+        // If participant exists, proceed to dashboard
+        toast.success("Login successful!");
+        router.push("/dashboard");
+      }
     } catch (err) {
       toast.error("Failed to login!");
       console.error("Error during login:", err);
@@ -676,6 +693,35 @@ const Login = () => {
             }
           >
             Register
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openParticipantStatus}
+        onClose={handleCloseParticipantStatus}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Competition Status Update"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            We regret to inform you that you have not advanced to the next round
+            of the competition. Thank you for your participation and enthusiasm.
+            We encourage you to continue developing your skills and consider
+            participating in future competitions. Your dedication and effort are
+            truly appreciated.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseParticipantStatus}
+            color="primary"
+            autoFocus
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>

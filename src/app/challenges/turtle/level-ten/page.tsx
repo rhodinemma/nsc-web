@@ -28,6 +28,8 @@ const LevelTenPage: React.FC = () => {
       console.error("Error updating progress:", error);
       toast.error("Failed to update score!");
     }
+
+    router.push("/challenges");
   }, [email, router]);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ const LevelTenPage: React.FC = () => {
       //failed or completed
       console.log("Message received from iframe:", event.data);
 
-      if (event.data === "completed") {
+      if (event.data.action === "completed") {
         submitScores();
         toast.success("Level 10 completed!");
       } else {
@@ -52,7 +54,7 @@ const LevelTenPage: React.FC = () => {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [submitScores]);
 
   return (
     <>

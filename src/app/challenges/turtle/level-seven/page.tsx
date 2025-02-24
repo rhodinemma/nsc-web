@@ -41,7 +41,7 @@ const LevelSevenPage: React.FC = () => {
       //failed or completed
       console.log("Message received from iframe:", event.data);
 
-      if (event.data === "completed") {
+      if (event.data.action === "completed") {
         submitScores();
         toast.success("Level 7 completed!");
       } else {
@@ -54,7 +54,7 @@ const LevelSevenPage: React.FC = () => {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [submitScores]);
 
   return (
     <>

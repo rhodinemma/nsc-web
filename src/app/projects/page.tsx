@@ -114,7 +114,7 @@ const BuildProjectPage = () => {
     const fetchParticipantProject = async () => {
       try {
         const response = await axios.post(
-          `https://progressbot-vzd5.onrender.com/api/v1/project/participant`,
+          `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/project/participant`,
           {
             email: email,
           }
@@ -152,7 +152,7 @@ const BuildProjectPage = () => {
       formData.append("file", file);
 
       const response = await axios.post(
-        "https://progressbot-vzd5.onrender.com/api/v1/uploads",
+        "https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/uploads",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -202,7 +202,7 @@ const BuildProjectPage = () => {
 
     try {
       const response = await axios.post(
-        `https://progressbot-vzd5.onrender.com/api/v1/project`,
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/project`,
         {
           title: formData.title,
           subTheme: formData.subTheme,
@@ -226,7 +226,7 @@ const BuildProjectPage = () => {
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
-        `https://progressbot-vzd5.onrender.com/api/v1/project/${selectedProjectId}`
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/project/${selectedProjectId}`
       );
 
       console.log("Project deleted successfully:", response.data);

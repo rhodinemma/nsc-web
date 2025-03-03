@@ -48,7 +48,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://progressbot-vzd5.onrender.com/api/v1/identities/login",
+        "https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/identities/login",
         {
           email,
           password,
@@ -86,7 +86,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://progressbot-vzd5.onrender.com/api/v1/identities",
+        "https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/identities",
         data,
         {
           headers: { "Content-Type": "application/json" },

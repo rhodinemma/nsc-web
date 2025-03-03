@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React from "react";
 import { Box, Typography, Link } from "@mui/material";
@@ -14,10 +14,23 @@ const Footer = () => {
       }}
     >
       <hr />
-      <Typography variant="body2" sx={{ mb: 1 }}>
+      <Typography
+        variant="body2"
+        sx={{ mb: 1, position: "relative", zIndex: 2, color: "white" }}
+      >
         © {new Date().getFullYear()} Code Academy Uganda. All rights reserved.
       </Typography>
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 3, mb: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 3,
+          mb: 1,
+          position: "relative",
+          zIndex: 2,
+          color: "white",
+        }}
+      >
         <Link href="/terms" color="inherit" underline="hover">
           Terms of Service
         </Link>

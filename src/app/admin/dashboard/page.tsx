@@ -26,22 +26,25 @@ import {
   Grid,
   IconButton,
   Stack,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import useJuryStore from "@/store/projectStore";
 import { useRouter } from "next/navigation";
 import useJuryAuthStore from "@/store/juryStore";
+import SummaryCard from "@/components/SummaryCard/SummaryCard";
 
 interface Assessor {
   _id: string;
@@ -65,7 +68,7 @@ interface ParticipantList {
   email: string;
 }
 
-interface ProjectData {
+export interface ProjectData {
   _id?: string;
   title: string;
   subTheme: string;
@@ -73,6 +76,7 @@ interface ProjectData {
   participant?: string;
   participants?: Participant[];
   description: string;
+  round?: number;
   file?: string;
   createdAt?: Date;
   updatedAt?: string;
@@ -174,6 +178,8 @@ const JuryDashboardPage = () => {
   const [selectedParticipants, setSelectedParticipants] = useState<
     { name: string; email: string; score: string }[]
   >([]);
+
+  const [tabValue, setTabValue] = useState(0);
 
   // const [score1, setScore1] = useState<number | "">("");
   // const [score2, setScore2] = useState<number | "">("");
@@ -756,7 +762,142 @@ const JuryDashboardPage = () => {
     [getProjectScore, getChallengeScore]
   );
 
-  console.log("to submit", selectedParticipants);
+  console.log("projects", projects);
+
+  // Use useMemo to memoize the filtering process
+  const { roundTwoProjects, nonRoundTwoProjects } = useMemo(() => {
+    // Separate projects into two arrays based on round
+    const roundTwoProjects = projects.filter((project) => project.round === 2);
+    const nonRoundTwoProjects = projects.filter(
+      (project) => project.round !== 2
+    );
+
+    return { roundTwoProjects, nonRoundTwoProjects };
+  }, [projects]);
+
+  console.log("round 1", nonRoundTwoProjects);
+  console.log("round 2", roundTwoProjects);
+
+  // Handle tab change
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  // Render project list
+  const renderProjectList = (projectList: ProjectData[]) => (
+    <>
+      <Grid container spacing={2}>
+        {projectList.map((project, index) => (
+          <>
+            <Grid item xs={12} sm={6} md={4} mt={2} key={project._id || index}>
+              <Card
+                sx={{
+                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  padding: 2,
+                  textAlign: "center",
+                  height: "200px",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Sub-theme pill */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: "#1976d2",
+                    color: "#fff",
+                    padding: "4px 8px",
+                    borderRadius: "16px",
+                    fontSize: "0.7rem",
+                  }}
+                >
+                  {project.subTheme}
+                </Box>
+
+                <Avatar
+                  src={"/puzzle.svg"}
+                  alt={project.title}
+                  sx={{ width: 56, height: 56, marginBottom: 1 }}
+                />
+                <Typography variant="h6" gutterBottom>
+                  {toSentenceCase(project.title)}
+                </Typography>
+
+                {/* Clamped Description */}
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{
+                    display: "-webkit-box",
+                    // WebkitBoxOrient: "vertical",
+                    // overflow: "hidden",
+                    WebkitLineClamp: 1,
+                    textOverflow: "ellipsis",
+                    textAlign: "left",
+                    width: "100%",
+                    marginBottom: 4, // Space for buttons
+                  }}
+                >
+                  {truncateText(project.description, 1)}
+                </Typography>
+
+                {/* Buttons */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 4,
+                  }}
+                >
+                  <Button
+                    variant="text"
+                    color="primary"
+                    size="small"
+                    startIcon={<FileOpen />}
+                    onClick={() => handleReviewProject(project)}
+                  >
+                    Review
+                  </Button>
+
+                  {/* Conditionally render "Mark" button */}
+                  {!checkSubmission[project._id ?? ""] && (
+                    <Button
+                      variant="text"
+                      color="primary"
+                      size="small"
+                      startIcon={<AssignmentTurnedIn />}
+                      onClick={() => handleAssessProject(project)}
+                    >
+                      Mark
+                    </Button>
+                  )}
+
+                  {/* Conditionally render "Download" button */}
+                  {!checkSubmission[project._id ?? ""] && (
+                    <Button
+                      variant="text"
+                      color="primary"
+                      size="small"
+                      startIcon={<Download />}
+                      onClick={() =>
+                        handleDownload(project?.file ?? "", project?.title)
+                      }
+                    >
+                      Download
+                    </Button>
+                  )}
+                </Box>
+              </Card>
+            </Grid>
+          </>
+        ))}
+      </Grid>
+    </>
+  );
 
   return (
     <>
@@ -774,7 +915,7 @@ const JuryDashboardPage = () => {
           color="secondary"
           sx={{ margin: "2rem 0 2rem 0" }}
         >
-          Participant projects
+          Admin Jury Dashboard
         </Typography>
 
         {/* Header Section */}
@@ -789,8 +930,8 @@ const JuryDashboardPage = () => {
           >
             {/* <Typography variant="h5">All projects</Typography> */}
             <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="h5">All projects</Typography>
-              <Chip size="small" label={projects?.length} color="primary" />
+              <Typography variant="h5">Overview</Typography>
+              {/* <Chip size="small" label={projects?.length} color="primary" /> */}
             </Box>
             {juryRole === "Admin" && (
               <Box>
@@ -806,156 +947,226 @@ const JuryDashboardPage = () => {
             )}
           </Box>
 
+          {/* <Box sx={{ flexGrow: 1, padding: 2 }}> */}
+          {/* Project Count Cards */}
+          {/* <Grid container spacing={2} sx={{ marginBottom: 2 }}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="secondary">
+                    All Projects
+                  </Typography>
+                  <Typography variant="h4" color="text.secondary">
+                    {projects.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="secondary">
+                    Round 1 Projects
+                  </Typography>
+                  <Typography variant="h4" color="text.secondary">
+                    {nonRoundTwoProjects.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="primary">
+                    Round 2 Projects
+                  </Typography>
+                  <Typography variant="h4" color="text.secondary">
+                    {roundTwoProjects.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid> */}
+
+          <SummaryCard
+            projects={projects}
+            roundTwoProjects={roundTwoProjects}
+            nonRoundTwoProjects={nonRoundTwoProjects}
+          />
+
+          {/* Tabs for Project Details */}
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              aria-label="project tabs"
+            >
+              <Tab label={`Round 1 Projects (${nonRoundTwoProjects.length})`} />
+              <Tab label={`Round 2 Projects (${roundTwoProjects.length})`} />
+            </Tabs>
+          </Box>
+
+          {/* Tab Panels */}
+          {tabValue === 0 && <>{renderProjectList(nonRoundTwoProjects)}</>}
+
+          {tabValue === 1 && <>{renderProjectList(roundTwoProjects)}</>}
+          {/* </Box> */}
+
           {/* Content Section */}
-          <Grid container spacing={3}>
-            {loading ? (
-              <Container disableGutters>
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="center"
-                  alignItems="center"
-                  height="50vh"
-                >
-                  <CircularProgress />
-                </Box>
-              </Container>
-            ) : (
-              !loading &&
-              projects?.length > 0 &&
-              projects?.map((project, index) => (
-                <Grid item xs={12} sm={6} md={4} mb={3} key={index}>
-                  <Card
+          {juryRole === "Jury" && (
+            <Grid container spacing={3}>
+              {loading ? (
+                <Container disableGutters>
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="50vh"
+                  >
+                    <CircularProgress />
+                  </Box>
+                </Container>
+              ) : (
+                !loading &&
+                projects?.length > 0 &&
+                projects?.map((project, index) => (
+                  <Grid item xs={12} sm={6} md={4} mb={3} key={index}>
+                    <Card
+                      sx={{
+                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: 2,
+                        textAlign: "center",
+                        height: "200px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Sub-theme pill */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          backgroundColor: "#1976d2",
+                          color: "#fff",
+                          padding: "4px 8px",
+                          borderRadius: "16px",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        {project.subTheme}
+                      </Box>
+
+                      <Avatar
+                        src={"/puzzle.svg"}
+                        alt={project.title}
+                        sx={{ width: 56, height: 56, marginBottom: 1 }}
+                      />
+                      <Typography variant="h6" gutterBottom>
+                        {toSentenceCase(project.title)}
+                      </Typography>
+
+                      {/* Clamped Description */}
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{
+                          display: "-webkit-box",
+                          // WebkitBoxOrient: "vertical",
+                          // overflow: "hidden",
+                          WebkitLineClamp: 1,
+                          textOverflow: "ellipsis",
+                          textAlign: "left",
+                          width: "100%",
+                          marginBottom: 4, // Space for buttons
+                        }}
+                      >
+                        {truncateText(project.description, 1)}
+                      </Typography>
+
+                      {/* Buttons */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 4,
+                        }}
+                      >
+                        <Button
+                          variant="text"
+                          color="primary"
+                          size="small"
+                          startIcon={<FileOpen />}
+                          onClick={() => handleReviewProject(project)}
+                        >
+                          Review
+                        </Button>
+
+                        {/* Conditionally render "Mark" button */}
+                        {!checkSubmission[project._id ?? ""] && (
+                          <Button
+                            variant="text"
+                            color="primary"
+                            size="small"
+                            startIcon={<AssignmentTurnedIn />}
+                            onClick={() => handleAssessProject(project)}
+                          >
+                            Mark
+                          </Button>
+                        )}
+
+                        {/* Conditionally render "Download" button */}
+                        {!checkSubmission[project._id ?? ""] && (
+                          <Button
+                            variant="text"
+                            color="primary"
+                            size="small"
+                            startIcon={<Download />}
+                            onClick={() =>
+                              handleDownload(
+                                project?.file ?? "",
+                                project?.title
+                              )
+                            }
+                          >
+                            Download
+                          </Button>
+                        )}
+                      </Box>
+                    </Card>
+                  </Grid>
+                ))
+              )}
+
+              {!loading && projects.length === 0 && (
+                <Container disableGutters>
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="50vh"
                     sx={{
-                      position: "relative",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      padding: 2,
-                      textAlign: "center",
-                      height: "200px",
-                      overflow: "hidden",
+                      bgcolor: "whitesmoke",
+                      color: "#7d7d7d",
+                      borderRadius: "1rem",
+                      marginTop: "2rem",
+                      marginBottom: "2rem",
+                      marginLeft: "1rem",
                     }}
                   >
-                    {/* Sub-theme pill */}
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        backgroundColor: "#1976d2",
-                        color: "#fff",
-                        padding: "4px 8px",
-                        borderRadius: "16px",
-                        fontSize: "0.7rem",
-                      }}
-                    >
-                      {project.subTheme}
-                    </Box>
-
-                    <Avatar
-                      src={"/puzzle.svg"}
-                      alt={project.title}
-                      sx={{ width: 56, height: 56, marginBottom: 1 }}
-                    />
-                    <Typography variant="h6" gutterBottom>
-                      {toSentenceCase(project.title)}
+                    <HourglassDisabled style={{ fontSize: 50 }} />
+                    <Typography variant="h5">
+                      No projects assigned yet!
                     </Typography>
-
-                    {/* Clamped Description */}
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      sx={{
-                        display: "-webkit-box",
-                        // WebkitBoxOrient: "vertical",
-                        // overflow: "hidden",
-                        WebkitLineClamp: 1,
-                        textOverflow: "ellipsis",
-                        textAlign: "left",
-                        width: "100%",
-                        marginBottom: 4, // Space for buttons
-                      }}
-                    >
-                      {truncateText(project.description, 1)}
-                    </Typography>
-
-                    {/* Buttons */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 4,
-                      }}
-                    >
-                      <Button
-                        variant="text"
-                        color="primary"
-                        size="small"
-                        startIcon={<FileOpen />}
-                        onClick={() => handleReviewProject(project)}
-                      >
-                        Review
-                      </Button>
-
-                      {/* Conditionally render "Mark" button */}
-                      {!checkSubmission[project._id ?? ""] && (
-                        <Button
-                          variant="text"
-                          color="primary"
-                          size="small"
-                          startIcon={<AssignmentTurnedIn />}
-                          onClick={() => handleAssessProject(project)}
-                        >
-                          Mark
-                        </Button>
-                      )}
-
-                      {/* Conditionally render "Download" button */}
-                      {!checkSubmission[project._id ?? ""] && (
-                        <Button
-                          variant="text"
-                          color="primary"
-                          size="small"
-                          startIcon={<Download />}
-                          onClick={() =>
-                            handleDownload(project?.file ?? "", project?.title)
-                          }
-                        >
-                          Download
-                        </Button>
-                      )}
-                    </Box>
-                  </Card>
-                </Grid>
-              ))
-            )}
-
-            {!loading && projects.length === 0 && (
-              <Container disableGutters>
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="center"
-                  alignItems="center"
-                  height="50vh"
-                  sx={{
-                    bgcolor: "whitesmoke",
-                    color: "#7d7d7d",
-                    borderRadius: "1rem",
-                    marginTop: "2rem",
-                    marginBottom: "2rem",
-                    marginLeft: "1rem",
-                  }}
-                >
-                  <HourglassDisabled style={{ fontSize: 50 }} />
-                  <Typography variant="h5">
-                    No projects assigned yet!
-                  </Typography>
-                </Box>
-              </Container>
-            )}
-          </Grid>
+                  </Box>
+                </Container>
+              )}
+            </Grid>
+          )}
 
           {/* Review project dialog */}
           <Dialog

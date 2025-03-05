@@ -415,23 +415,25 @@ const BuildProjectPage = () => {
                           View details
                         </Button> */}
                       </Box>
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          bottom: 8,
-                          right: 8,
-                        }}
-                      >
-                        <Button
-                          variant="text"
-                          color="warning"
-                          size="small"
-                          onClick={() => handleOpenDeleteDialog(project._id!)}
-                          // onClick={() => handleDelete(project._id)}
+                      {project.round === 2 && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            bottom: 8,
+                            right: 8,
+                          }}
                         >
-                          Delete project
-                        </Button>
-                      </Box>
+                          <Button
+                            variant="text"
+                            color="warning"
+                            size="small"
+                            onClick={() => handleOpenDeleteDialog(project._id!)}
+                            // onClick={() => handleDelete(project._id)}
+                          >
+                            Delete project
+                          </Button>
+                        </Box>
+                      )}
                     </Card>
                   </Grid>
                 ))

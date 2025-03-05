@@ -81,6 +81,8 @@ const Challenges = () => {
   const [mazeEscapeOpen, setmazeEscapeOpen] = useState<boolean>(false);
   const [treasureHuntOpen, settreasureHuntOpen] = useState<boolean>(false);
   const [patternPainterOpen, setpatternPainterOpen] = useState<boolean>(false);
+  const [movieOpen, setMovieOpen] = useState<boolean>(false);
+  const [musicOpen, setMusicOpen] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -277,6 +279,162 @@ const Challenges = () => {
         },
       ],
     },
+    {
+      id: "67c85f6a3eb5a416e5d1781a",
+      name: "Movie",
+      description: "",
+      isAuthorizedtoTake: true,
+      challenges: [
+        {
+          id: "67c869203eb5a416e5d1781c",
+          name: "Level 1",
+          description: "Level 1",
+          isCompleted: false,
+          path: "/movie/level-one",
+        },
+        {
+          id: "67c869b33eb5a416e5d1781e",
+          name: "Level 2",
+          description: "Level 2",
+          isCompleted: false,
+          path: "/movie/level-two",
+        },
+        {
+          id: "67c869bc3eb5a416e5d17820",
+          name: "Level 3",
+          description: "Level 3",
+          isCompleted: false,
+          path: "/movie/level-three",
+        },
+        {
+          id: "67c869c63eb5a416e5d17822",
+          name: "Level 4",
+          description: "Level 4",
+          isCompleted: false,
+          path: "/movie/level-four",
+        },
+        {
+          id: "67c869d03eb5a416e5d17824",
+          name: "Level 5",
+          description: "Level 5",
+          isCompleted: false,
+          path: "/movie/level-five",
+        },
+        {
+          id: "67c869fa3eb5a416e5d17826",
+          name: "Level 6",
+          description: "Level 6",
+          isCompleted: false,
+          path: "/movie/level-six",
+        },
+        {
+          id: "67c86a043eb5a416e5d17828",
+          name: "Level 7",
+          description: "Level 7",
+          isCompleted: false,
+          path: "/movie/level-seven",
+        },
+        {
+          id: "67c86a0e3eb5a416e5d1782a",
+          name: "Level 8",
+          description: "Level 8",
+          isCompleted: false,
+          path: "/movie/level-eight",
+        },
+        {
+          id: "67c86a1a3eb5a416e5d1782c",
+          name: "Level 9",
+          description: "Level 9",
+          isCompleted: false,
+          path: "/movie/level-nine",
+        },
+        {
+          id: "67c86a233eb5a416e5d1782e",
+          name: "Level 10",
+          description: "Level 10",
+          isCompleted: false,
+          path: "/movie/level-ten",
+        },
+      ],
+    },
+    {
+      id: "67c8703d3eb5a416e5d17830",
+      name: "Music",
+      description: "",
+      isAuthorizedtoTake: true,
+      challenges: [
+        {
+          id: "67c871733eb5a416e5d17832",
+          name: "Level 1",
+          description: "Level 1",
+          isCompleted: false,
+          path: "/music/level-one",
+        },
+        {
+          id: "67c871833eb5a416e5d17834",
+          name: "Level 2",
+          description: "Level 2",
+          isCompleted: false,
+          path: "/music/level-two",
+        },
+        {
+          id: "67c871903eb5a416e5d17836",
+          name: "Level 3",
+          description: "Level 3",
+          isCompleted: false,
+          path: "/music/level-three",
+        },
+        {
+          id: "67c871b33eb5a416e5d17838",
+          name: "Level 4",
+          description: "Level 4",
+          isCompleted: false,
+          path: "/music/level-four",
+        },
+        {
+          id: "67c871bc3eb5a416e5d1783a",
+          name: "Level 5",
+          description: "Level 5",
+          isCompleted: false,
+          path: "/music/level-five",
+        },
+        {
+          id: "67c871cb3eb5a416e5d1783c",
+          name: "Level 6",
+          description: "Level 6",
+          isCompleted: false,
+          path: "/music/level-six",
+        },
+        {
+          id: "67c871d53eb5a416e5d1783e",
+          name: "Level 7",
+          description: "Level 7",
+          isCompleted: false,
+          path: "/music/level-seven",
+        },
+        {
+          id: "67c871df3eb5a416e5d17840",
+          name: "Level 8",
+          description: "Level 8",
+          isCompleted: false,
+          path: "/music/level-eight",
+        },
+        {
+          id: "67c871e83eb5a416e5d17842",
+          name: "Level 9",
+          description: "Level 9",
+          isCompleted: false,
+          path: "/music/level-nine",
+        },
+        {
+          id: "67c871f13eb5a416e5d17844",
+          name: "Level 10",
+          description: "Level 10",
+          isCompleted: false,
+          path: "/music/level-ten",
+        },
+      ],
+    },
   ];
 
   useEffect(() => {
@@ -332,6 +490,10 @@ const Challenges = () => {
         return () => settreasureHuntOpen((prev) => !prev);
       case "67ab69bb8663464f42566861":
         return () => setpatternPainterOpen((prev) => !prev);
+      case "67c85f6a3eb5a416e5d1781a":
+        return () => setMovieOpen((prev) => !prev);
+      case "67c8703d3eb5a416e5d17830":
+        return () => setMusicOpen((prev) => !prev);
       default:
         return () => {};
     }
@@ -345,6 +507,10 @@ const Challenges = () => {
         return treasureHuntOpen;
       case "67ab69bb8663464f42566861":
         return patternPainterOpen;
+      case "67c85f6a3eb5a416e5d1781a":
+        return movieOpen;
+      case "67c8703d3eb5a416e5d17830":
+        return musicOpen;
       default:
         return false;
     }

@@ -16,8 +16,8 @@ const LevelNinePage: React.FC = () => {
         `https://pt-9ffdb6ad-c541-4d3d-88f7.cranecloud.io/api/v1/progress`,
         {
           participant: email,
-          challengeId: "",
-          levelId: "",
+          challengeId: "67c8703d3eb5a416e5d17830",
+          levelId: "67c871e83eb5a416e5d17842",
           score: 10,
           completed: true,
         }

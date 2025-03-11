@@ -42,7 +42,7 @@ const LevelThreePage: React.FC = () => {
       //failed or completed
       console.log("Message received from iframe:", event.data);
 
-      if (event.data === "completed") {
+      if (event.data.action === "completed") {
         toast.success("Level 3 completed!");
         submitScores();
       } else {
@@ -55,7 +55,7 @@ const LevelThreePage: React.FC = () => {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [submitScores]);
 
   return (
     <>

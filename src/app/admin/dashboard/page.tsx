@@ -122,7 +122,7 @@ interface AdminProjectData {
 
 interface Challenge {
   challengeId: string;
-  averageScore: string; // Stored as "X / Y"
+  averageScore: string;
   completionPercentage: number;
 }
 
@@ -150,6 +150,9 @@ const JuryDashboardPage = () => {
     AssignedAssessor[]
   >([]);
   const [juryDetails, setJuryDetails] = useState<Jury | null>(null);
+  // const [projectComments, setProjectComments] = useState();
+  const [feedbackComment, setFeedback] = useState("");
+  const [juryComments, setJuryComments] = useState<any>();
 
   const [loading, setLoading] = useState(false);
   const [reviewProject, setReviewProject] = useState<ProjectData | null>(null);
@@ -173,6 +176,14 @@ const JuryDashboardPage = () => {
   const [adminProjectScore, setAdminProjectScore] = useState<
     AdminProjectData[] | null
   >(null);
+  const [adminRoundTwoProjectScore, setAdminRoundTwoProjectScore] = useState<
+    AdminProjectData[] | null
+  >(null);
+
+  const [challengesCount, setChallengesCount] = useState<number>(0);
+  const [challengeSubmissionsCount, setChallengeSubmissionCount] =
+    useState<number>(0);
+  const [challengeLevelsCount, setChallengeLevelsCount] = useState<number>(0);
 
   // handle submiting scores for participants
   const [selectedParticipants, setSelectedParticipants] = useState<
@@ -180,6 +191,44 @@ const JuryDashboardPage = () => {
   >([]);
 
   const [tabValue, setTabValue] = useState(0);
+
+  const [activeTab, setActiveTab] = useState(0);
+
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+
+      // Use the correct endpoint based on the active tab
+      const url =
+        "https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/participant/export-project-scores";
+      const response = await axios.get(url, {
+        responseType: "blob",
+      });
+
+      // Create a link element to download the file
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `nsc_final_score_sheet_round_${activeTab + 1}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+      setIsExporting(false);
+    } catch (error) {
+      console.error("Export failed:", error);
+      setIsExporting(false);
+    }
+  };
+
+  const handleChangeTab = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  // console.log("project comments", projectComments);
 
   // const [score1, setScore1] = useState<number | "">("");
   // const [score2, setScore2] = useState<number | "">("");
@@ -417,7 +466,7 @@ const JuryDashboardPage = () => {
   const getAllProjectScores = useCallback(async () => {
     try {
       const response = await axios.get(
-        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/identities/project-scores`
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/identities/round-one`
       );
       setAdminProjectScore(response.data.data);
       console.log("Project scores fetched:", response.data.data);
@@ -425,6 +474,63 @@ const JuryDashboardPage = () => {
       console.error("Failed to get all projects:", error);
     }
   }, []);
+
+  const getRoundTwoProjectScores = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/identities/round-two`
+      );
+      setAdminRoundTwoProjectScore(response.data.data);
+      console.log("Round 2 Project scores fetched:", response.data.data);
+    } catch (error) {
+      console.error("Failed to get all projects:", error);
+    }
+  }, []);
+
+  // get number of challenges
+  const getChallengesCount = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/challenge`
+      );
+      setChallengesCount(response.data.data);
+    } catch (error) {
+      console.error("Failed to get challenges count:", error);
+    }
+  }, []);
+
+  // get number of challenge submissions
+  const getChallengeSubmissionsCount = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/challenge/submissions`
+      );
+      setChallengeSubmissionCount(response.data.data);
+    } catch (error) {
+      console.error("Failed to get challenge submission count:", error);
+    }
+  }, []);
+
+  const getChallengeLevelsCount = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/level`
+      );
+      setChallengeLevelsCount(response.data.data);
+    } catch (error) {
+      console.error("Failed to get challenge submission count:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getChallengesCount();
+    getChallengeLevelsCount();
+    getChallengeSubmissionsCount();
+  }, [
+    getChallengeLevelsCount,
+    getChallengeSubmissionsCount,
+    getChallengesCount,
+  ]);
 
   // const handleOpenDialog = () => {
   //   // fetch all scores here
@@ -435,8 +541,9 @@ const JuryDashboardPage = () => {
   const handleOpenDialog = useCallback(() => {
     // Call the API to fetch scores
     getAllProjectScores();
+    getRoundTwoProjectScores();
     setOpenDialog(true);
-  }, [getAllProjectScores]);
+  }, [getAllProjectScores, getRoundTwoProjectScores]);
 
   const handleCloseDialog = () => setOpenDialog(false);
 
@@ -489,6 +596,41 @@ const JuryDashboardPage = () => {
         }
       }
       return null;
+    },
+    [juryId]
+  );
+
+  // const getProjectComments = useCallback(async (projectId: string) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/comment/project/${projectId}`
+  //     );
+
+  //     if (response) {
+  //       setProjectComments(response.data.data ?? null);
+  //     }
+
+  //     return null;
+  //   } catch (error) {
+  //     console.error("Failed to get jury projects comments:", error);
+  //   }
+  // }, []);
+
+  const getJuryComments = useCallback(
+    async (projectId: string) => {
+      try {
+        const response = await axios.get(
+          `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/comment/project/${projectId}/jury/${juryId}`
+        );
+
+        if (response) {
+          setJuryComments(response.data.data ?? null);
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Failed to get jury projects comments:", error);
+      }
     },
     [juryId]
   );
@@ -546,6 +688,8 @@ const JuryDashboardPage = () => {
     setProjectScore(null);
 
     getProjectScores(project?._id ?? "");
+
+    getJuryComments(project?._id ?? "");
 
     setOpenReviewDialog(true);
   };
@@ -657,8 +801,28 @@ const JuryDashboardPage = () => {
       setOpenSendResultsDialog(false);
       setSelectedParticipants([]);
     } catch (err) {
-      toast.error("Failed to login!");
-      console.error("Error during login:", err);
+      toast.error("Failed to submit result!");
+      console.error("Error during results submission:", err);
+    }
+  };
+
+  const handleCommentSubmit = async (projectID: string) => {
+    try {
+      await axios.post(
+        "https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/comment",
+        {
+          project: projectID ?? "",
+          jury: juryId,
+          feedback: feedbackComment,
+        }
+      );
+
+      toast.success("Comment added successfully!");
+
+      handleCloseReviewProject();
+    } catch (error) {
+      toast.error("Failed to add comment!");
+      console.error("Error during comment submission:", error);
     }
   };
 
@@ -762,8 +926,6 @@ const JuryDashboardPage = () => {
     [getProjectScore, getChallengeScore]
   );
 
-  console.log("projects", projects);
-
   // Use useMemo to memoize the filtering process
   const { roundTwoProjects, nonRoundTwoProjects } = useMemo(() => {
     // Separate projects into two arrays based on round
@@ -775,13 +937,12 @@ const JuryDashboardPage = () => {
     return { roundTwoProjects, nonRoundTwoProjects };
   }, [projects]);
 
-  console.log("round 1", nonRoundTwoProjects);
-  console.log("round 2", roundTwoProjects);
-
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  console.log("comments", juryComments);
 
   // Render project list
   const renderProjectList = (projectList: ProjectData[]) => (
@@ -823,7 +984,20 @@ const JuryDashboardPage = () => {
                   alt={project.title}
                   sx={{ width: 56, height: 56, marginBottom: 1 }}
                 />
-                <Typography variant="h6" gutterBottom>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    WebkitLineClamp: 1,
+                    textOverflow: "ellipsis",
+                    textAlign: "left",
+                    width: "100%",
+                    paddingBottom: 4,
+                  }}
+                  gutterBottom
+                >
                   {toSentenceCase(project.title)}
                 </Typography>
 
@@ -928,22 +1102,24 @@ const JuryDashboardPage = () => {
               marginBottom: 2,
             }}
           >
-            {/* <Typography variant="h5">All projects</Typography> */}
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="h5">Overview</Typography>
-              {/* <Chip size="small" label={projects?.length} color="primary" /> */}
-            </Box>
             {juryRole === "Admin" && (
-              <Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleOpenDialog}
-                  startIcon={<Grid4x4 />}
-                >
-                  Open score sheet
-                </Button>
-              </Box>
+              <>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="h5">Overview</Typography>
+                  {/* <Chip size="small" label={projects?.length} color="primary" /> */}
+                </Box>
+
+                <Box>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleOpenDialog}
+                    startIcon={<Grid4x4 />}
+                  >
+                    Open score sheets
+                  </Button>
+                </Box>
+              </>
             )}
           </Box>
 
@@ -988,29 +1164,40 @@ const JuryDashboardPage = () => {
             </Grid>
           </Grid> */}
 
-          <SummaryCard
-            projects={projects}
-            roundTwoProjects={roundTwoProjects}
-            nonRoundTwoProjects={nonRoundTwoProjects}
-          />
+          {juryRole !== "Jury" && (
+            <>
+              <SummaryCard
+                projects={projects}
+                roundTwoProjects={roundTwoProjects}
+                nonRoundTwoProjects={nonRoundTwoProjects}
+                challengesCount={challengesCount}
+                challengeLevelsCount={challengeLevelsCount}
+                challengeSubmissionsCount={challengeSubmissionsCount}
+              />
 
-          {/* Tabs for Project Details */}
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              aria-label="project tabs"
-            >
-              <Tab label={`Round 1 Projects (${nonRoundTwoProjects.length})`} />
-              <Tab label={`Round 2 Projects (${roundTwoProjects.length})`} />
-            </Tabs>
-          </Box>
+              {/* Tabs for Project Details */}
+              <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  aria-label="project tabs"
+                >
+                  <Tab
+                    label={`Round 1 Projects (${nonRoundTwoProjects.length})`}
+                  />
+                  <Tab
+                    label={`Round 2 Projects (${roundTwoProjects.length})`}
+                  />
+                </Tabs>
+              </Box>
 
-          {/* Tab Panels */}
-          {tabValue === 0 && <>{renderProjectList(nonRoundTwoProjects)}</>}
+              {/* Tab Panels */}
+              {tabValue === 0 && <>{renderProjectList(nonRoundTwoProjects)}</>}
 
-          {tabValue === 1 && <>{renderProjectList(roundTwoProjects)}</>}
-          {/* </Box> */}
+              {tabValue === 1 && <>{renderProjectList(roundTwoProjects)}</>}
+              {/* </Box> */}
+            </>
+          )}
 
           {/* Content Section */}
           {juryRole === "Jury" && (
@@ -1425,7 +1612,7 @@ const JuryDashboardPage = () => {
                               /50
                             </TableCell>
                           </TableRow>
-                        ) : adminProjectScore?.length === 0 &&
+                        ) : adminProjectScore?.length === 0 ||
                           projectScore === null ? (
                           <Box
                             display="flex"
@@ -1471,6 +1658,58 @@ const JuryDashboardPage = () => {
                     </Table>
                   </TableContainer>
 
+                  <Typography variant="h6" gutterBottom sx={{ marginTop: 10 }}>
+                    Comments
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableBody>
+                        <Box
+                          sx={{
+                            marginTop: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          <TextField
+                            label="Add a comment"
+                            onChange={(e) => setFeedback(e.target.value)}
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                          />
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() =>
+                              handleCommentSubmit(reviewProject?._id ?? "")
+                            }
+                          >
+                            Submit
+                          </Button>
+                        </Box>
+
+                        {juryComments && juryComments.length > 0 ? (
+                          <ol>
+                            {juryComments
+                              .filter(
+                                (comment: any) => comment.juryId === juryId
+                              )
+                              .map((comment: any, index: number) => (
+                                <li key={index}>{comment.feedback}</li>
+                              ))}
+                            {juryComments.every(
+                              (comment: any) => comment.juryId !== juryId
+                            ) && <p>No feedback available</p>}
+                          </ol>
+                        ) : (
+                          <Typography>No feedback available</Typography>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
                   {/* {adminProjectScore === null && projectScore === null && (
                     
                   )} */}
@@ -1492,85 +1731,188 @@ const JuryDashboardPage = () => {
               <Box
                 display="flex"
                 justifyContent="space-between"
-                alignItems="center"
+                alignItems="left"
               >
                 <Typography variant="h6">
-                  NSC final score sheet ({adminProjectScore?.length} marked
-                  projects)
+                  {activeTab === 0
+                    ? `NSC final score sheet for Round 1 -  (${adminProjectScore?.length} marked projects)`
+                    : `NSC final score sheet for Round 2 - (${adminRoundTwoProjectScore?.length} marked projects)`}
                 </Typography>
+                {activeTab === 1 && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={
+                      isExporting ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <Download />
+                      )
+                    }
+                    onClick={handleExport}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? "Downloading..." : "Download results"}
+                  </Button>
+                )}
                 <IconButton onClick={handleCloseDialog} size="small">
                   <Close />
                 </IconButton>
               </Box>
             </DialogTitle>
             <DialogContent>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Title</TableCell>
-                      <TableCell>SubTheme</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>Participants</TableCell>
-                      {/* <TableCell>Average Score</TableCell> */}
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {adminProjectScore?.map((projectData, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {toSentenceCase(projectData.project.title)}
-                        </TableCell>
-                        <TableCell>{projectData.project.subTheme}</TableCell>
-                        <TableCell>
-                          {truncateText(projectData.project.description, 3)}
-                        </TableCell>
-                        <TableCell>
-                          {projectData.project.participants &&
-                            projectData?.project?.participants.map(
-                              (participant, index) => (
-                                <Chip
-                                  key={index}
-                                  label={participant as unknown as string}
-                                  variant="outlined"
-                                  sx={{ marginRight: 0.5, marginBottom: 0.5 }}
-                                />
-                              )
-                            )}
+              {/* Tabs Navigation */}
+              <Tabs value={activeTab} onChange={handleChangeTab}>
+                <Tab label="Round 1 Score Sheet" />
+                <Tab label="Round 2 Score Sheet" />
+              </Tabs>
 
-                          <Chip
-                            // key={index}
-                            label={
-                              `Submitted by: ${projectData?.project?.participant}` as unknown as string
-                            }
-                            variant="outlined"
-                            sx={{
-                              marginRight: 0.5,
-                              marginBottom: 0.5,
-                              borderColor: "green",
-                              color: "green",
-                            }}
-                          />
-                        </TableCell>
-                        {/* <TableCell>
+              {activeTab === 0 && (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Title</TableCell>
+                        <TableCell>SubTheme</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Participants</TableCell>
+                        {/* <TableCell>Average Score</TableCell> */}
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {adminProjectScore?.map((projectData, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {toSentenceCase(projectData.project.title)}
+                          </TableCell>
+                          <TableCell>{projectData.project.subTheme}</TableCell>
+                          <TableCell>
+                            {truncateText(projectData.project.description, 3)}
+                          </TableCell>
+                          <TableCell>
+                            {projectData.project.participants &&
+                              projectData?.project?.participants.map(
+                                (participant, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={participant as unknown as string}
+                                    variant="outlined"
+                                    sx={{ marginRight: 0.5, marginBottom: 0.5 }}
+                                  />
+                                )
+                              )}
+
+                            <Chip
+                              // key={index}
+                              label={
+                                `Submitted by: ${projectData?.project?.participant}` as unknown as string
+                              }
+                              variant="outlined"
+                              sx={{
+                                marginRight: 0.5,
+                                marginBottom: 0.5,
+                                borderColor: "green",
+                                color: "green",
+                              }}
+                            />
+                          </TableCell>
+                          {/* <TableCell>
                           {Math.round(projectData.averageScore)} / 50
                         </TableCell> */}
-                        <TableCell>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={() => handleSendResults(projectData)}
-                          >
-                            View results
-                          </Button>
-                        </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              onClick={() => handleSendResults(projectData)}
+                            >
+                              View results
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+
+              {activeTab === 1 && (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Title</TableCell>
+                        <TableCell>SubTheme</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Participants</TableCell>
+                        {/* <TableCell>Average Score</TableCell> */}
+                        <TableCell>Actions</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {adminRoundTwoProjectScore?.map(
+                        (projectData, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              {toSentenceCase(projectData.project.title)}
+                            </TableCell>
+                            <TableCell>
+                              {projectData.project.subTheme}
+                            </TableCell>
+                            <TableCell>
+                              {truncateText(projectData.project.description, 3)}
+                            </TableCell>
+                            <TableCell>
+                              {projectData.project.participants &&
+                                projectData?.project?.participants.map(
+                                  (participant, index) => (
+                                    <Chip
+                                      key={index}
+                                      label={participant as unknown as string}
+                                      variant="outlined"
+                                      sx={{
+                                        marginRight: 0.5,
+                                        marginBottom: 0.5,
+                                      }}
+                                    />
+                                  )
+                                )}
+
+                              <Chip
+                                // key={index}
+                                label={
+                                  `Submitted by: ${projectData?.project?.participant}` as unknown as string
+                                }
+                                variant="outlined"
+                                sx={{
+                                  marginRight: 0.5,
+                                  marginBottom: 0.5,
+                                  borderColor: "green",
+                                  color: "green",
+                                }}
+                              />
+                            </TableCell>
+                            {/* <TableCell>
+                        {Math.round(projectData.averageScore)} / 50
+                      </TableCell> */}
+                            <TableCell>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                size="small"
+                                onClick={() => handleSendResults(projectData)}
+                              >
+                                View results
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </DialogContent>
             {/* Dialog Actions */}
             <DialogActions>
@@ -1686,19 +2028,32 @@ const JuryDashboardPage = () => {
                                 challengeScore.challenges.filter(
                                   (challenge) =>
                                     challenge.challengeId ===
-                                    "672d1513bc573ddbaf73b560"
+                                    "67ab69bb8663464f42566861"
                                 )
                               )}
                               %
                             </TableCell>
 
+                            {/* <TableCell>
+                              {getTotalScore(
+                                resultsProject,
+                                challengeScore.challenges.filter(
+                                  (challenge) =>
+                                    challenge.challengeId ===
+                                    {activeTab === 1 ? "672d1513bc573ddbaf73b560" : "672d1513bc573ddbaf73b560"}
+                                )
+                              )}{" "}
+                              %
+                            </TableCell> */}
                             <TableCell>
                               {getTotalScore(
                                 resultsProject,
                                 challengeScore.challenges.filter(
                                   (challenge) =>
                                     challenge.challengeId ===
-                                    "672d1513bc573ddbaf73b560"
+                                    (activeTab === 1
+                                      ? "67ab69bb8663464f42566861"
+                                      : "672d1513bc573ddbaf73b560")
                                 )
                               )}{" "}
                               %

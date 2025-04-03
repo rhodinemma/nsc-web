@@ -12,6 +12,9 @@ import {
   ListAlt as ListAltIcon,
   LooksTwo as LooksTwoIcon,
   LooksOne as LooksOneIcon,
+  Games,
+  Moving,
+  Extension,
 } from "@mui/icons-material";
 import { ProjectData } from "@/app/admin/dashboard/page";
 
@@ -31,7 +34,17 @@ const SummaryCard: React.FC<{
   projects: ProjectData[];
   roundTwoProjects: ProjectData[];
   nonRoundTwoProjects: ProjectData[];
-}> = ({ projects, roundTwoProjects, nonRoundTwoProjects }) => {
+  challengesCount: number;
+  challengeLevelsCount: number;
+  challengeSubmissionsCount: number;
+}> = ({
+  projects,
+  roundTwoProjects,
+  nonRoundTwoProjects,
+  challengesCount,
+  challengeLevelsCount,
+  challengeSubmissionsCount,
+}) => {
   //   const theme = useTheme();
 
   //   const cardData = [
@@ -86,27 +99,37 @@ const SummaryCard: React.FC<{
     {
       title: "All Projects",
       count: projects.length,
-      icon: <ListAltIcon sx={{ fontSize: 50, color: "white", opacity: 0.8 }} />,
-      gradientColors: ["#6a11cb 0%", "#2575fc 100%"],
-      shadowColor: "rgba(37, 117, 252, 0.4)",
+      icon: <ListAltIcon sx={{ fontSize: 50, color: "black", opacity: 0.8 }} />,
     },
     {
       title: "Round 1 Projects",
       count: nonRoundTwoProjects.length,
       icon: (
-        <LooksOneIcon sx={{ fontSize: 50, color: "white", opacity: 0.8 }} />
+        <LooksOneIcon sx={{ fontSize: 50, color: "black", opacity: 0.8 }} />
       ),
-      gradientColors: ["#ff6a00 0%", "#ee0979 100%"],
-      shadowColor: "rgba(238, 9, 121, 0.4)",
     },
     {
       title: "Round 2 Projects",
       count: roundTwoProjects.length,
       icon: (
-        <LooksTwoIcon sx={{ fontSize: 50, color: "white", opacity: 0.8 }} />
+        <LooksTwoIcon sx={{ fontSize: 50, color: "black", opacity: 0.8 }} />
       ),
-      gradientColors: ["#11998e 0%", "#38ef7d 100%"],
       shadowColor: "rgba(56, 239, 125, 0.4)",
+    },
+    {
+      title: "Challenges",
+      count: challengesCount,
+      icon: <Games sx={{ fontSize: 50, color: "black", opacity: 0.8 }} />,
+    },
+    {
+      title: "Levels",
+      count: challengeLevelsCount,
+      icon: <Extension sx={{ fontSize: 50, color: "black", opacity: 0.8 }} />,
+    },
+    {
+      title: "Level Submissions",
+      count: challengeSubmissionsCount,
+      icon: <Moving sx={{ fontSize: 50, color: "black", opacity: 0.8 }} />,
     },
   ];
 
@@ -170,8 +193,8 @@ const SummaryCard: React.FC<{
         <Grid item xs={12} sm={6} md={4} key={index}>
           <Card
             sx={{
-              background: `linear-gradient(45deg, ${card.gradientColors[0]}, ${card.gradientColors[1]})`,
-              backgroundSize: "200% 200%",
+              // background: `linear-gradient(45deg, ${card.gradientColors[0]}, ${card.gradientColors[1]})`,
+              // backgroundSize: "200% 200%",
               color: "white",
               transition: "all 0.3s ease-in-out",
               borderRadius: 3,
@@ -216,7 +239,7 @@ const SummaryCard: React.FC<{
                     sx={{
                       fontWeight: 600,
                       marginBottom: 1,
-                      color: "rgba(255,255,255,0.9)",
+                      color: "black",
                       letterSpacing: "0.5px",
                     }}
                   >
@@ -226,8 +249,7 @@ const SummaryCard: React.FC<{
                     variant="h4"
                     sx={{
                       fontWeight: 700,
-                      color: "white",
-                      textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                      color: "#0A1045",
                     }}
                   >
                     {card.count}

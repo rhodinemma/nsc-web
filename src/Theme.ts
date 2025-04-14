@@ -21,7 +21,7 @@ export const PrimaryTheme = createTheme({
     }
   },
   typography: {
-    fontFamily: 'Gidole, sans-serif',
+    fontFamily: 'Delius, sans-serif',
   },
   components: {
     MuiButton: {

@@ -45,6 +45,7 @@ import useJuryStore from "@/store/projectStore";
 import { useRouter } from "next/navigation";
 import useJuryAuthStore from "@/store/juryStore";
 import SummaryCard from "@/components/SummaryCard/SummaryCard";
+import ParticipantsTable from "@/components/Table";
 
 interface Assessor {
   _id: string;
@@ -196,13 +197,30 @@ const JuryDashboardPage = () => {
 
   const [isExporting, setIsExporting] = useState(false);
 
+  const [roundTwoParticipants, setRoundTwoParticipants] = useState([]);
+
+  const fetchRoundTwoParticipants = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        "https://node-server-b06a12d4-9203-43be-9cfd.ahumain.cranecloud.io/api/v1/participant/list-participants"
+      );
+      setRoundTwoParticipants(response.data.data);
+    } catch (error) {
+      console.error("Error fetching participants for round 2:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRoundTwoParticipants();
+  }, [fetchRoundTwoParticipants]);
+
   const handleExport = async () => {
     try {
       setIsExporting(true);
 
       // Use the correct endpoint based on the active tab
       const url =
-        "https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/participant/export-project-scores";
+        "https://node-server-b06a12d4-9203-43be-9cfd.ahumain.cranecloud.io/api/v1/participant/export-project-scores";
       const response = await axios.get(url, {
         responseType: "blob",
       });
@@ -1188,6 +1206,9 @@ const JuryDashboardPage = () => {
                   <Tab
                     label={`Round 2 Projects (${roundTwoProjects.length})`}
                   />
+                  <Tab
+                    label={`Round 2 Participants (${roundTwoParticipants.length})`}
+                  />
                 </Tabs>
               </Box>
 
@@ -1195,6 +1216,12 @@ const JuryDashboardPage = () => {
               {tabValue === 0 && <>{renderProjectList(nonRoundTwoProjects)}</>}
 
               {tabValue === 1 && <>{renderProjectList(roundTwoProjects)}</>}
+
+              {tabValue === 2 && (
+                <>
+                  <ParticipantsTable participants={roundTwoParticipants} />
+                </>
+              )}
               {/* </Box> */}
             </>
           )}

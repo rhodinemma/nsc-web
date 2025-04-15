@@ -16,6 +16,8 @@ import useParticipantStore from "@/store/participantStore";
 import axios from "axios";
 import ImageCarousel from "@/components/ImageCarousel";
 import CongratulationsSection from "@/components/Congs/Congs";
+import CertificateGenerator from "@/components/Certificates/Index";
+import CertificateSection from "@/components/CertificateSection";
 
 const images = [
   { src: "/1.jpeg", alt: "Poster 1" },
@@ -306,7 +308,11 @@ const Dashboard = () => {
           <Grid container spacing={4}>
             {/* Left Section */}
             <Grid item xs={12} md={8} sx={{ position: "relative", zIndex: 2 }}>
-              <CongratulationsSection userName={username} />
+              {/* <CongratulationsSection userName={username} /> */}
+
+              {/* <CertificateGenerator /> */}
+
+              <CertificateSection />
 
               <Paper
                 elevation={2}

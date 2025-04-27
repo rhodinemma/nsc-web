@@ -161,20 +161,24 @@ const Login = () => {
 
       localStorage.setItem("token", response.data?.access_token);
 
-      // Check participant status
-      const participantResponse = await axios.get(
-        `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/participant/check-participant/${email}`
-      );
+      // If participant exists, proceed to dashboard
+      toast.success("Login successful!");
+      router.push("/dashboard");
 
-      if (!participantResponse.data?.data?.[0]) {
-        // If data array is empty, show dialog
-        setOpenParticipantStatus(true);
-        toast.info("Please check your participation status");
-      } else {
-        // If participant exists, proceed to dashboard
-        toast.success("Login successful!");
-        router.push("/dashboard");
-      }
+      // // Check participant status
+      // const participantResponse = await axios.get(
+      //   `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/participant/check-participant/${email}`
+      // );
+
+      // if (!participantResponse.data?.data?.[0]) {
+      //   // If data array is empty, show dialog
+      //   setOpenParticipantStatus(true);
+      //   toast.info("Please check your participation status");
+      // } else {
+      //   // If participant exists, proceed to dashboard
+      //   toast.success("Login successful!");
+      //   router.push("/dashboard");
+      // }
     } catch (err) {
       toast.error("Failed to login!");
       console.error("Error during login:", err);

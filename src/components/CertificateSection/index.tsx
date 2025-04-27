@@ -1,4 +1,3 @@
-// components/CertificateSection.tsx
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -69,6 +68,7 @@ const CertificateSection: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const { width, height } = useWindowSize();
 
@@ -82,7 +82,7 @@ const CertificateSection: React.FC = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3002/api/v1/participant/generate-certificate",
+        "https://nsc-nine-ab95ebc2-4bb5-4518-8d9b.ahumain.cranecloud.io/api/v1/participant/generate-certificate",
         {
           name: capitalizeFullName(username),
         },
@@ -103,9 +103,10 @@ const CertificateSection: React.FC = () => {
   };
 
   const downloadCertificate = async () => {
+    setIsDownloading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3002/api/v1/participant/generate-certificate",
+        "https://nsc-nine-ab95ebc2-4bb5-4518-8d9b.ahumain.cranecloud.io/api/v1/participant/generate-certificate",
         { name: capitalizeFullName(username) },
         {
           responseType: "blob",
@@ -125,6 +126,8 @@ const CertificateSection: React.FC = () => {
     } catch (error) {
       console.error("Failed to download certificate:", error);
       alert("Something went wrong while downloading the certificate.");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -170,12 +173,16 @@ const CertificateSection: React.FC = () => {
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
                 variant="outlined"
-                startIcon={<PreviewIcon />}
+                startIcon={
+                  isLoading ? <CircularProgress size="1rem" /> : <PreviewIcon />
+                }
                 onClick={generatePreview}
                 disabled={isLoading}
                 fullWidth
               >
-                Open Certificate
+                {isLoading
+                  ? "Creating your certificate....."
+                  : "Get Certificate"}
               </Button>
             </Stack>
           </Box>
@@ -222,11 +229,20 @@ const CertificateSection: React.FC = () => {
               <Button
                 variant="contained"
                 color="primary"
-                startIcon={<DownloadIcon />}
+                startIcon={
+                  isDownloading ? (
+                    <CircularProgress size="1rem" />
+                  ) : (
+                    <DownloadIcon />
+                  )
+                }
                 onClick={downloadCertificate}
+                disabled={isDownloading}
                 fullWidth
               >
-                Download Certificate
+                {isDownloading
+                  ? "Downloading certificate...."
+                  : "Download your certificate"}
               </Button>
             </Box>
           ) : (

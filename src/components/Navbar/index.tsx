@@ -34,8 +34,14 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard" },
-    { name: "Code Challenge", path: "/challenges" },
-    { name: "Projects", path: "/projects" },
+    {
+      name: "Code Challenge",
+      // path: "/challenges"
+    },
+    {
+      name: "Projects",
+      // path: "/projects"
+    },
     { name: "Logout", path: "/logout" },
   ];
 
@@ -67,7 +73,7 @@ const Navbar = () => {
             {navItems.map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
-                  onClick={() => handleNavigation(item.path)}
+                  onClick={() => handleNavigation(item.path || "/dashboard")}
                   sx={{ whiteSpace: "nowrap" }}
                 >
                   <ListItemText primary={item.name} />
@@ -90,7 +96,9 @@ const Navbar = () => {
         <List>
           {navItems.map((item) => (
             <ListItem key={item.name} disablePadding>
-              <ListItemButton onClick={() => handleNavigation(item.path)}>
+              <ListItemButton
+                onClick={() => handleNavigation(item.path || "/dashboard")}
+              >
                 <ListItemText primary={item.name} />
               </ListItemButton>
             </ListItem>

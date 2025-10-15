@@ -221,7 +221,7 @@ const Dashboard = () => {
       const fetchProgress = async () => {
         try {
           const { data } = await axios.get<ProgressSummary>(
-            `https://pt-updated-c6ed560c-f7ed-437c-b7bb.cranecloud.io/api/v1/progress/dashboard-summary/participant?email=${email}`
+            `https://nsc-nine-ab95ebc2-4bb5-4518-8d9b.ahumain.cranecloud.io/api/v1/progress/dashboard-summary/participant?email=${email}`
           );
 
           const summary = data;
@@ -263,7 +263,7 @@ const Dashboard = () => {
     const fetchParticipantProject = async () => {
       try {
         const response = await axios.post(
-          `https://progressrounds-4f470cd5-1187-4be1-a866.cranecloud.io/api/v1/project/participant`,
+          `https://nsc-nine-ab95ebc2-4bb5-4518-8d9b.ahumain.cranecloud.io/api/v1/project/participant`,
           {
             email: email,
           }
